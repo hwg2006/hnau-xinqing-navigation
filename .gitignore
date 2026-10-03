@@ -33,6 +33,8 @@ node_modules/
 dist/
 out/
 *.asar
+# electron-builder 打包产物（含安装包与 win-unpacked）
+desktop/release/
 
 # ---------- IDE / 编辑器 ----------
 .idea/

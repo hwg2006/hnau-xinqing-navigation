@@ -25,9 +25,13 @@
     "files": [
       "main.js",
       "preload.js",
-      "renderer.js",
-      "../web/**/*",
       "assets/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../web",
+        "to": "web"
+      }
     ],
     "win": {
       "target": ["nsis"],
