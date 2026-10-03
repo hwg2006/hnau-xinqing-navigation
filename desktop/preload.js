@@ -1,36 +1,37 @@
 // ============================================================
 // 华农心晴导航 - Preload 安全桥接
-// 只暴露白名单 API 给渲染层 (contextIsolation: true)
-// 同步读取配置文件 → 在 Vue setup 之前注入 window.APP_CONFIG
+// contextIsolation: true 时，preload 与页面处于两个隔离世界，
+// 直接赋值 window.APP_CONFIG 页面看不到，必须通过 contextBridge 暴露。
 // ============================================================
 
-const { contextBridge, ipcRenderer, app } = require('electron');
-const fs = require('fs');
-const path = require('path');
+const { contextBridge, ipcRenderer } = require('electron');
 
-// ---------- 同步读取配置 (在渲染层启动前) ----------
-// preload 在 sandbox:false 下可以直接用 app.getPath，比解析 process.argv 更可靠
-let config = { difyBaseUrl: 'http://localhost', difyApiKey: '' };
-try {
-  const configPath = path.join(app.getPath('userData'), 'config.json');
-  if (fs.existsSync(configPath)) {
-    config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-  }
-} catch (e) { /* 忽略 */ }
+// ---------- 解析主进程通过 additionalArguments 传入的参数 ----------
+// 注意: preload 运行在渲染进程，拿不到主进程的 app 模块，
+// 因此 userData 路径 / 代理地址都必须由主进程显式传入。
+function readArg(prefix) {
+  const hit = process.argv.find((a) => a.startsWith(prefix));
+  return hit ? hit.slice(prefix.length) : null;
+}
 
-// 同步注入 window.APP_CONFIG —— 比 config.js / Vue setup 更早执行
-window.APP_CONFIG = config;
+// 内嵌代理地址由主进程启动后传入；页面只拿到这个地址，不持有 API Key
+const proxyUrl = readArg('--proxy-url=');
 
-// ---------- IPC API 桥接 ----------
+// ---------- 暴露给页面主世界的配置 ----------
+contextBridge.exposeInMainWorld('HN_DESKTOP', {
+  config: proxyUrl ? { apiBaseUrl: proxyUrl } : {},
+  platform: process.platform,
+  versions: {
+    electron: process.versions.electron,
+    node: process.versions.node,
+  },
+});
+
+// ---------- IPC API 桥接（设置窗口读写配置用） ----------
 contextBridge.exposeInMainWorld('hnauAPI', {
-  // 配置读写 (异步, 用于设置窗口)
   getConfig: () => ipcRenderer.invoke('config:get'),
   saveConfig: (cfg) => ipcRenderer.invoke('config:set', cfg),
-
-  // 平台信息 (用于 UI 适配)
   platform: process.platform,
-
-  // 版本信息
   versions: {
     electron: process.versions.electron,
     node: process.versions.node,

@@ -7,17 +7,39 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell, globalShortcut } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
+const https = require('https');
 
 // ---------- 配置持久化 ----------
 const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
+// 项目内共享的密钥文件（与 Web/CLI 同一份，已被 .gitignore 排除）
+const ENV_PATH = path.join(__dirname, '..', 'config', '.env');
+
+function parseEnvFile(file) {
+  const out = {};
+  try {
+    const text = fs.readFileSync(file, 'utf-8');
+    for (const line of text.split(/\r?\n/)) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
+      if (m) out[m[1]] = m[2];
+    }
+  } catch (e) { /* 忽略 */ }
+  return out;
+}
 
 function loadConfig() {
+  // 1) 设置窗口写入的用户配置优先
   try {
     if (fs.existsSync(CONFIG_PATH)) {
       return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
     }
   } catch (e) { /* 忽略 */ }
-  return { difyBaseUrl: 'http://localhost', difyApiKey: '' };
+  // 2) 回退到项目 config/.env，免去在桌面端重复录入 Key
+  const env = parseEnvFile(ENV_PATH);
+  return {
+    difyBaseUrl: env.DIFY_BASE_URL || 'http://localhost',
+    difyApiKey: env.DIFY_API_KEY || '',
+  };
 }
 
 function saveConfig(cfg) {
@@ -26,6 +48,77 @@ function saveConfig(cfg) {
   } catch (e) {
     console.error('保存配置失败:', e);
   }
+}
+
+// ---------- 内嵌本地代理 ----------
+// 渲染层不持有 API Key：页面所有请求先打到本代理，由主进程注入
+// Authorization 后再转发给 Dify。与 server/dify_proxy.py 思路一致，
+// 只是跑在 Electron 主进程内，桌面端无需额外启动 Python 服务。
+let proxyServer = null;
+let proxyPort = 0;
+
+function startProxy() {
+  return new Promise((resolve, reject) => {
+    proxyServer = http.createServer((req, res) => {
+      // 渲染层从 file:// 加载，Origin 为 null，需放开 CORS
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Headers', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+
+      if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+      if (!req.url.startsWith('/v1/')) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+        return;
+      }
+
+      // 每次请求都重新读配置，设置窗口更改后可即时生效
+      const cfg = loadConfig();
+      let target;
+      try {
+        target = new URL(req.url, cfg.difyBaseUrl || 'http://localhost');
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'invalid difyBaseUrl' }));
+        return;
+      }
+
+      const chunks = [];
+      req.on('data', (c) => chunks.push(c));
+      req.on('end', () => {
+        const body = Buffer.concat(chunks);
+        const headers = {};
+        for (const [k, v] of Object.entries(req.headers)) {
+          if (k === 'host' || k === 'content-length' || k === 'connection') continue;
+          headers[k] = v;
+        }
+        if (cfg.difyApiKey) headers['authorization'] = `Bearer ${cfg.difyApiKey}`;
+        headers['content-length'] = Buffer.byteLength(body);
+
+        const mod = target.protocol === 'https:' ? https : http;
+        const upstream = mod.request(target, { method: req.method, headers }, (up) => {
+          res.writeHead(up.statusCode || 502, up.headers);
+          up.pipe(res); // SSE 流式透传
+        });
+        upstream.on('error', (e) => {
+          if (!res.headersSent) res.writeHead(502, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'upstream error: ' + e.message }));
+        });
+        upstream.end(body);
+      });
+      req.on('error', () => {
+        try { res.writeHead(400); res.end(); } catch (_) { /* 忽略 */ }
+      });
+    });
+
+    proxyServer.on('error', reject);
+    // 仅监听本机回环地址、随机端口，避免端口占用冲突
+    proxyServer.listen(0, '127.0.0.1', () => {
+      proxyPort = proxyServer.address().port;
+      resolve(proxyPort);
+    });
+  });
 }
 
 // ---------- 窗口管理 ----------
@@ -46,8 +139,12 @@ function createWindow() {
       nodeIntegration: false,        // 安全: 渲染层不允许 require
       sandbox: false,                // preload 需要 require fs/path
       webviewTag: false,             // 安全: 禁用 webview
-      // 把 userData 路径传给 preload，让它同步读取 config.json
-      additionalArguments: [`--user-data=${app.getPath('userData')}`],
+      // 把 userData 路径与内嵌代理地址传给 preload，
+      // preload 再通过 contextBridge 暴露给页面主世界
+      additionalArguments: [
+        `--user-data=${app.getPath('userData')}`,
+        `--proxy-url=http://127.0.0.1:${proxyPort}`,
+      ],
     },
     // 自定义标题栏 - 用 CSS 实现更现代的外观
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
@@ -57,7 +154,8 @@ function createWindow() {
   const htmlPath = path.join(__dirname, '..', 'web', 'index.html');
   win.loadFile(htmlPath);
 
-  // 注意: 配置已经在 preload.js 里同步注入 window.APP_CONFIG 了
+  // 注意: 配置由 preload.js 通过 contextBridge 暴露为 window.HN_DESKTOP.config，
+  // 页面侧 config.js 会优先读取它（contextIsolation 下必须走 contextBridge）
   // 无需再用 did-finish-load 注入，避免竞态条件
 
   // 打开外链时用系统浏览器
@@ -174,7 +272,15 @@ ipcMain.handle('config:set', (_evt, newCfg) => {
 });
 
 // ---------- 全局快捷键 ----------
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // 先启动内嵌代理，拿到端口后再建窗口（端口要传给 preload）
+  try {
+    await startProxy();
+    console.log(`[desktop] 内嵌代理已启动: http://127.0.0.1:${proxyPort}`);
+  } catch (e) {
+    console.error('启动内嵌代理失败:', e);
+  }
+
   createWindow();
   createTray();
 
@@ -194,4 +300,8 @@ app.on('window-all-closed', () => {
 
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
+  if (proxyServer) {
+    try { proxyServer.close(); } catch (e) { /* 忽略 */ }
+    proxyServer = null;
+  }
 });
