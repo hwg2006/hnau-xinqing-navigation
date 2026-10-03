@@ -1,0 +1,2599 @@
+app:
+  description: 华农校园心理健康智能陪伴AI助手（集成版V3）- 提供情绪支持、心理科普、焦虑自测、性格偏好小游戏、心情打卡、老师查询与校园资源导航。
+  icon: 🧠
+  icon_background: '#E8F5E9'
+  mode: advanced-chat
+  name: 华农心晴导航（集成版）V3
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: package
+  value:
+    plugin_unique_identifier: langgenius/openai_api_compatible:0.0.34@e48cbbb045473a9d04289becacf7626701e9d1b9c860fe5d9a4b87ad7fdb62bd
+kind: app
+version: 0.3.1
+workflow:
+  conversation_variables:
+  - description: 对话摘要，供后续轮次参考
+    id: 9581d122-a735-4501-b2b6-40bf062511f5
+    name: counseling
+    selector:
+    - conversation
+    - counseling
+    value: ''
+    value_type: string
+  - description: 记录用户核心困扰话题
+    id: c54bebd6-a774-4f8a-92a1-a54821f6cd4f
+    name: core_issue
+    selector:
+    - conversation
+    - core_issue
+    value: ''
+    value_type: string
+  - description: 记录用户当前情绪状态
+    id: ece003da-d84d-4b6c-be2c-b0c4c1a64a26
+    name: user_mood
+    selector:
+    - conversation
+    - user_mood
+    value: ''
+    value_type: string
+  - description: 工作流风险标签；仅记录风险类型，查看权限与留存方式须由学校平台配置
+    id: 7f3d1a8e-9b2c-4f5d-8a1e-2c4a6b8d0e1f
+    name: anon_risk_tag
+    selector:
+    - conversation
+    - anon_risk_tag
+    value: ''
+    value_type: string
+  - description: 最后一次GAD-7筛查等级（无或极轻微/轻度/中度/重度）
+    id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+    name: last_assessment_level
+    selector:
+    - conversation
+    - last_assessment_level
+    value: ''
+    value_type: string
+  - description: 打卡总次数，每次+1
+    id: b2c3d4e5-f6a7-8901-bcde-f12345678901
+    name: light_checkin_count
+    value: '0'
+    selector:
+    - conversation
+    - light_checkin_count
+    value_type: string
+  - description: GAD-7当前题号；0表示未进行，1-7表示等待回答对应题目
+    id: c3d4e5f6-a7b8-9012-cdef-123456789012
+    name: gad7_step
+    selector:
+    - conversation
+    - gad7_step
+    value: '0'
+    value_type: string
+  - description: GAD-7已收集分数，使用英文逗号分隔
+    id: d4e5f6a7-b8c9-0123-defa-234567890123
+    name: gad7_scores
+    selector:
+    - conversation
+    - gad7_scores
+    value: ''
+    value_type: string
+  - description: 性格偏好小游戏当前题号；0表示未进行，1-24表示等待回答对应题目
+    id: e5f6a7b8-c9d0-1234-efab-345678901234
+    name: personality_step
+    selector:
+    - conversation
+    - personality_step
+    value: '0'
+    value_type: string
+  - description: 性格偏好小游戏已收集答案，使用英文逗号分隔
+    id: f6a7b8c9-d0e1-2345-fabc-456789012345
+    name: personality_answers
+    selector:
+    - conversation
+    - personality_answers
+    value: ''
+    value_type: string
+  - description: 性格偏好小游戏状态（未开始/进行中/已完成）
+    id: a7b8c9d0-e1f2-3456-abcd-567890123456
+    name: personality_test_status
+    selector:
+    - conversation
+    - personality_test_status
+    value: 未开始
+    value_type: string
+  - description: 快速心情打卡当前题号；0表示未进行，1-3表示等待回答对应题目
+    id: b8c9d0e1-f2a3-4567-bcde-678901234567
+    name: light_step
+    selector:
+    - conversation
+    - light_step
+    value: '0'
+    value_type: string
+  - description: 快速心情打卡临时答案
+    id: c9d0e1f2-a3b4-5678-cdef-789012345678
+    name: light_answers
+    selector:
+    - conversation
+    - light_answers
+    value: ''
+    value_type: string
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 50
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: '你好，我是华农心晴导航，一个校园心理支持AI助手，不是真人心理老师，也不能替代心理咨询师或医生。
+
+
+      如果你愿意，可以和我聊聊最近的压力、心情，或者学业和人际关系上的困扰。
+
+      我也可以帮你做GAD-7焦虑自测、性格偏好小游戏，或查询校园心理服务和老师公开信息。
+
+
+      为保护隐私，请不要发送姓名、学号、身份证号、电话、住址等身份信息；对话内容可能按学校平台的管理规则留存和处理。
+
+      如果遇到紧急情况，请立即拨打 12356 或 120。'
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions:
+    - 我最近考试压力很大，睡不着怎么办？
+    - 帮我做一个焦虑自测（GAD-7）
+    - 怎么预约学校的心理咨询？
+    - 最近感觉很累，什么都不想做
+    - 帮我查一下心理老师的信息
+    - 我想做快速心情打卡
+    suggested_questions_after_answer:
+      enabled: true
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        sourceType: start
+        targetType: if-else
+      id: start-to-prefilter
+      source: '1785506775822'
+      sourceHandle: source
+      target: crisis_prefilter
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: assigner
+      id: prefilter-to-crisis
+      source: crisis_prefilter
+      sourceHandle: 'true'
+      target: assign_risk_prefilter
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: code
+      id: prefilter-to-codetime
+      source: crisis_prefilter
+      sourceHandle: 'false'
+      target: code_time
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        isInIteration: false
+        sourceType: assigner
+        targetType: answer
+      id: prefilter-risk-to-crisis-reply
+      source: assign_risk_prefilter
+      sourceHandle: source
+      target: crisis_reply_warm
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: parameter-extractor
+        targetType: if-else
+      id: intent-to-router
+      source: intent_extract_v2
+      sourceHandle: source
+      target: intent_router_v2
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: assigner
+      id: router-crisis-immediate
+      source: intent_router_v2
+      sourceHandle: crisis_immediate
+      target: assign_risk_immediate
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - id: assign-risk-to-crisis-answer
+      source: assign_risk_immediate
+      sourceHandle: source
+      target: crisis_answer
+      targetHandle: target
+      type: custom
+      zIndex: 0
+      data:
+        sourceType: assigner
+        targetType: answer
+        isInLoop: false
+        isInIteration: false
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: assigner
+      id: router-crisis-highrisk
+      source: intent_router_v2
+      sourceHandle: crisis_high_risk
+      target: assign_risk_high
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - id: assign-risk-to-warm-referral
+      source: assign_risk_high
+      sourceHandle: source
+      target: warm_referral
+      targetHandle: target
+      type: custom
+      zIndex: 0
+      data:
+        sourceType: assigner
+        targetType: answer
+        isInLoop: false
+        isInIteration: false
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: router-distress
+      source: intent_router_v2
+      sourceHandle: distress
+      target: llm
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: code
+      id: router-gad7
+      source: intent_router_v2
+      sourceHandle: gad7_test
+      target: llm_selftest_01
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: code
+      id: router-personality
+      source: intent_router_v2
+      sourceHandle: personality_test
+      target: llm_personality_01
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: knowledge-retrieval
+      id: router-campus
+      source: intent_router_v2
+      sourceHandle: campus_service
+      target: knowledge_retrieval_01
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: code
+      id: router-teacher
+      source: intent_router_v2
+      sourceHandle: teacher_query
+      target: code_teacher_service
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: code
+      id: router-light
+      source: intent_router_v2
+      sourceHandle: light_assess
+      target: bridge_light
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: router-false
+      source: intent_router_v2
+      sourceHandle: 'false'
+      target: llm
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        sourceType: knowledge-retrieval
+        targetType: llm
+      id: knowledge-to-llmkb
+      source: knowledge_retrieval_01
+      sourceHandle: source
+      target: llm_kb
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        sourceType: llm
+        targetType: answer
+      id: llmkb-to-answer
+      source: llm_kb
+      sourceHandle: success-branch
+      target: answer_kb
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        sourceType: code
+        targetType: code
+      id: gad7-to-code
+      source: llm_selftest_01
+      sourceHandle: source
+      target: code_gad7
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        sourceType: code
+        targetType: assigner
+      id: codegad7-to-answer
+      source: code_gad7
+      sourceHandle: source
+      target: assign_gad7_level
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - id: assign-gad7-to-answer
+      source: assign_gad7_level
+      sourceHandle: source
+      target: answer_selftest_01
+      targetHandle: target
+      type: custom
+      zIndex: 0
+      data:
+        sourceType: assigner
+        targetType: answer
+        isInLoop: false
+        isInIteration: false
+    - data:
+        sourceType: code
+        targetType: code
+      id: personality-to-code
+      source: llm_personality_01
+      sourceHandle: source
+      target: code_personality
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        sourceType: code
+        targetType: assigner
+      id: codepersonality-to-answer
+      source: code_personality
+      sourceHandle: source
+      target: assign_personality_done
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - id: assign-personality-to-answer
+      source: assign_personality_done
+      sourceHandle: source
+      target: answer_personality_01
+      targetHandle: target
+      type: custom
+      zIndex: 0
+      data:
+        sourceType: assigner
+        targetType: answer
+        isInLoop: false
+        isInIteration: false
+    - data:
+        sourceType: llm
+        targetType: code
+      id: llm-to-memext
+      source: llm
+      sourceHandle: success-branch
+      target: strip_summary
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: parameter-extractor
+        targetType: assigner
+      id: memext-to-memassign
+      source: memory_extract_v2
+      sourceHandle: source
+      target: memory_assign_v2
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: assigner
+        targetType: answer
+      id: memassign-to-answer
+      source: memory_assign_v2
+      sourceHandle: source
+      target: answer
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: answer
+      id: teacher-to-answer
+      source: code_teacher_service
+      sourceHandle: source
+      target: answer_teacher
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: answer
+      id: light-to-answer
+      source: llm_light_selfest
+      sourceHandle: source
+      target: answer_light
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: code
+      id: bridge-to-code
+      source: bridge_light
+      sourceHandle: source
+      target: code_light_count
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: assigner
+      id: bridge-to-assign
+      source: code_light_count
+      sourceHandle: source
+      target: assign_light_count
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: assigner
+        targetType: code
+      id: assign-to-llm
+      source: assign_light_count
+      sourceHandle: source
+      target: llm_light_selfest
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: parameter-extractor
+      id: time-to-intent
+      source: code_time
+      sourceHandle: source
+      target: intent_extract_v2
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - id: strip-memory-4483f99f
+      source: strip_summary
+      sourceHandle: source
+      target: memory_extract_v2
+      targetHandle: target
+      type: custom
+      zIndex: 0
+      data:
+        sourceType: code
+        targetType: parameter-extractor
+        isInIteration: false
+        isInLoop: false
+    - id: error-llm-to-fallback
+      source: llm
+      sourceHandle: fail-branch
+      target: fallback_error_answer
+      targetHandle: target
+      type: custom
+      zIndex: 0
+      data:
+        sourceType: llm
+        targetType: answer
+        isInLoop: false
+        isInIteration: false
+    - id: error-llm_kb-to-fallback
+      source: llm_kb
+      sourceHandle: fail-branch
+      target: fallback_error_answer
+      targetHandle: target
+      type: custom
+      zIndex: 0
+      data:
+        sourceType: llm
+        targetType: answer
+        isInLoop: false
+        isInIteration: false
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: answer
+      id: prefilter-to-pii
+      source: crisis_prefilter
+      sourceHandle: pii
+      target: answer_pii
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: answer
+      id: prefilter-to-image
+      source: crisis_prefilter
+      sourceHandle: image
+      target: answer_image
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: 开始
+        type: start
+        variables: []
+      height: 53
+      id: '1785506775822'
+      position:
+        x: 30
+        y: 486
+      positionAbsolute:
+        x: 30
+        y: 486
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: contains
+            id: cp1
+            value: 想死
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp2
+            value: 自杀
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp3
+            value: 不想活
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp4
+            value: 结束生命
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp5
+            value: 我要死
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp6
+            value: 让我死
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp7
+            value: 活不下去
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp8
+            value: 死了算了
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp9
+            value: 我想死
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp10
+            value: 想自杀
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp11
+            value: 不想活了
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp12
+            value: 寻死
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp13
+            value: 求死
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp14
+            value: 找死
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp15
+            value: 想消失
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp16
+            value: 求个解脱
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp17
+            value: 死了就解脱
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp18
+            value: 一了百了
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp19
+            value: 死了一了百了
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp20
+            value: 离开这个世界
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp21
+            value: 消失算了
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp22
+            value: 没有我更好
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp23
+            value: 我是个负担
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp24
+            value: 撑不下去了
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp25
+            value: 活着没意思
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp26
+            value: 活着好累
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp27
+            value: 活着没意义
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp28
+            value: 不想继续活了
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp29
+            value: 痛苦得不想活
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp30
+            value: 熬不下去了
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp31
+            value: 活着坚持不住了
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp32
+            value: 吃安眠药自杀
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp33
+            value: 割腕
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp34
+            value: 跳楼
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp35
+            value: 自残
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp36
+            value: 伤害自己
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp37
+            value: 结束一切
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp38
+            value: 割自己
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp39
+            value: 准备跳楼
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp40
+            value: 准备割腕
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp41
+            value: 准备自杀
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp42
+            value: 再见这个世界
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp43
+            value: 向所有人告别
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp44
+            value: 这是我最后一程
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp45
+            value: 只能等来世
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp46
+            value: 不想有下辈子
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp47
+            value: 再也不想醒来
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp48
+            value: 想永远睡过去
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: cp49
+            value: 我死了算了
+            variable_selector:
+            - sys
+            - query
+          logical_operator: or
+        - case_id: pii
+          conditions:
+          - comparison_operator: contains
+            id: pii_1
+            value: 学号
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: pii_2
+            value: 身份证
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: pii_3
+            value: 手机号
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: pii_4
+            value: 保存我的
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: pii_5
+            value: 个人信息
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: pii_6
+            value: 聊天记录
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: pii_7
+            value: 我的隐私
+            variable_selector:
+            - sys
+            - query
+          logical_operator: or
+        - case_id: image
+          conditions:
+          - comparison_operator: contains
+            id: img_1
+            value: 上传图片
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: img_2
+            value: 上传照片
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: img_3
+            value: 发照片
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: img_4
+            value: 发图片
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: img_5
+            value: 识别图片
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: img_6
+            value: 看图识别
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: img_7
+            value: 能看图
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: img_8
+            value: 发张图
+            variable_selector:
+            - sys
+            - query
+          - comparison_operator: contains
+            id: img_9
+            value: 传图片
+            variable_selector:
+            - sys
+            - query
+          logical_operator: or
+        desc: 在分类器前检测明确危机表达；避免使用“想跳”“想自”等过短片段造成误判，命中后先写入风险标签再回复
+        selected: false
+        title: 危机关键词预检
+        type: if-else
+      height: 128
+      id: crisis_prefilter
+      position:
+        x: 380
+        y: 486
+      positionAbsolute:
+        x: 380
+        y: 486
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - id: assign_risk_prefilter
+      type: custom
+      position:
+        x: 730
+        y: 100
+      positionAbsolute:
+        x: 730
+        y: 100
+      width: 303
+      height: 117
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: assigner
+        version: '2'
+        title: 写入危机预检标签
+        desc: 记录危机关键词命中，供校方依规复核；标签本身不包含身份信息
+        selected: false
+        items:
+        - input_type: constant
+          operation: over-write
+          value: crisis_keyword_hit
+          variable_selector:
+          - conversation
+          - anon_risk_tag
+          write_mode: over-write
+    - data:
+        answer: '我在听，我在这里。
+
+
+          听起来你现在真的很不容易，我能感觉到你心里有多难受。你不是一个人在面对这些，我在这里陪着你。
+
+
+          如果你愿意，可以告诉我更多，我会认真听，不会评判你。如果你觉得现在需要有人立刻陪在身边，请拨打全国统一心理援助热线 12356；如有迫切危险，请立即拨打 120 或 110。
+
+
+          你很重要，你值得被好好对待，也值得被帮助。'
+        desc: 危机关键词命中后的温暖朋友式回复
+        selected: false
+        title: 温暖危机回复
+        type: answer
+        variables: []
+      height: 337
+      id: crisis_reply_warm
+      position:
+        x: 380
+        y: 100
+      positionAbsolute:
+        x: 380
+        y: 100
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        code: "def main():\n    from datetime import datetime, timezone, timedelta\n    tz = timezone(timedelta(hours=8))\n    now = datetime.now(tz)\n    return {\n        \"time\": now.strftime(\"%Y-%m-%d %H:%M:%S\"),\n        \"date\": now.strftime(\"%Y-%m-%d\")\n    }"
+        code_language: python3
+        desc: 获取当前北京时间，用于时间感知关怀
+        outputs:
+          time:
+            children: null
+            type: string
+          date:
+            children: null
+            type: string
+        selected: false
+        title: 获取当前时间
+        type: code
+        variables: []
+      height: 81
+      id: code_time
+      position:
+        x: 730
+        y: 486
+      positionAbsolute:
+        x: 730
+        y: 486
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        desc: 识别用户意图（8类），仅发送精简指令给API，不含敏感词示例
+        instruction: '从用户输入中识别意图，只返回以下枚举值之一：
+
+
+          用户输入：{{#sys.query#}}
+
+
+          上一轮对话摘要：{{#conversation.counseling#}}
+
+          上一轮用户困扰：{{#conversation.core_issue#}}
+
+
+          注意：如果用户说「不是」「不对」「搞错了」「我说的是」等纠正性词语，请结合上一轮对话内容理解用户真正想问什么，不要因为否定词而误判为distress。例如：上一轮聊老师推荐，这一轮说「不是，是焦躁症」→ 仍然是 teacher_query。
+
+          多轮测评连续性：
+
+          - 当前GAD-7题号：{{#conversation.gad7_step#}}。只要该值不是0，用户的0/1/2/3、从来没有、有几天、一半以上、几乎每天以及“退出/取消/不做了”等回复，都必须判定为 gad7_test。
+
+          - 当前性格小游戏题号：{{#conversation.personality_step#}}。只要该值不是0，用户的A/B、选A/选B、前者/后者以及“退出/取消/不做了”等回复，都必须判定为 personality_test。
+
+          - 当前快速心情打卡题号：{{#conversation.light_step#}}。只要该值不是0，用户对情绪温度和后续两题的回答，以及“退出/取消/不做了”等回复，都必须判定为 light_assess。
+
+          - 危机意图始终高于测评连续性；如果测评中出现安全风险表达，仍判定为危机意图。
+
+          意图枚举：
+
+          - crisis_immediate: 用户明确表示处于紧急危险中，无法保证自身安全
+
+          - crisis_high_risk: 用户表达明显的安全风险想法，但未处于即时危险
+
+          - distress: 用户表达情绪困扰、压力、学业/人际关系等一般心理需求，或普通问候
+
+          - gad7_test: 用户主动要求做焦虑自测、GAD-7量表
+
+          - personality_test: 用户主动要求做性格/人格测试、MBTI
+
+          - campus_service: 用户询问校园心理服务（预约流程、地址、电话、开放时间、收费等）——注意：不含老师个人信息
+
+          - teacher_query: 用户询问心理老师信息、专长方向、擅长领域、老师名录，或根据自身症状/困扰要求推荐合适的老师
+
+          - light_assess: 用户主动要求做快速心情打卡、3题小测评
+
+
+          判定优先级：crisis_immediate > crisis_high_risk > teacher_query/gad7_test/personality_test/light_assess/campus_service > distress
+
+
+          重要区分：用户描述症状+要求推荐老师 → teacher_query（即使有情绪描述也优先判此类）；问「有哪些老师」「推荐擅长XX的老师」「给我推荐老师」→ teacher_query；问「怎么预约」「心理中心在哪」「电话多少」→ campus_service。'
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.1
+          mode: chat
+          name: Qwen3.5-35B-A3B
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+        parameters:
+        - description: 用户意图枚举（8类）
+          name: intent
+          required: true
+          type: string
+        query:
+        - '1785506775822'
+        - sys.query
+        reasoning_mode: prompt
+        selected: false
+        title: 意图识别（8类）
+        type: parameter-extractor
+        variables: []
+        vision:
+          enabled: false
+      height: 129
+      id: intent_extract_v2
+      position:
+        x: 1080
+        y: 486
+      positionAbsolute:
+        x: 1080
+        y: 486
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        cases:
+        - case_id: crisis_immediate
+          conditions:
+          - comparison_operator: is
+            id: c1
+            value: crisis_immediate
+            variable_selector:
+            - intent_extract_v2
+            - intent
+          logical_operator: and
+        - case_id: crisis_high_risk
+          conditions:
+          - comparison_operator: is
+            id: c2
+            value: crisis_high_risk
+            variable_selector:
+            - intent_extract_v2
+            - intent
+          logical_operator: and
+        - case_id: distress
+          conditions:
+          - comparison_operator: is
+            id: c3
+            value: distress
+            variable_selector:
+            - intent_extract_v2
+            - intent
+          logical_operator: and
+        - case_id: gad7_test
+          conditions:
+          - comparison_operator: is
+            id: c4
+            value: gad7_test
+            variable_selector:
+            - intent_extract_v2
+            - intent
+          logical_operator: and
+        - case_id: personality_test
+          conditions:
+          - comparison_operator: is
+            id: c5
+            value: personality_test
+            variable_selector:
+            - intent_extract_v2
+            - intent
+          logical_operator: and
+        - case_id: campus_service
+          conditions:
+          - comparison_operator: is
+            id: c6
+            value: campus_service
+            variable_selector:
+            - intent_extract_v2
+            - intent
+          logical_operator: and
+        - case_id: teacher_query
+          conditions:
+          - comparison_operator: is
+            id: c8
+            value: teacher_query
+            variable_selector:
+            - intent_extract_v2
+            - intent
+          logical_operator: and
+        - case_id: light_assess
+          conditions:
+          - comparison_operator: is
+            id: c10
+            value: light_assess
+            variable_selector:
+            - intent_extract_v2
+            - intent
+          logical_operator: and
+        desc: 根据意图识别结果路由到对应分支，确保只走一条路径（8类）
+        selected: false
+        title: 意图路由
+        type: if-else
+      height: 245
+      id: intent_router_v2
+      position:
+        x: 1430
+        y: 486
+      positionAbsolute:
+        x: 1430
+        y: 486
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        answer: '我听到了你的话，现在你最重要的事情是让专业的人陪在你身边。
+
+
+          请先拨打全国统一心理援助热线 12356。如果你已无法保证自身安全，请立即联系身边可信任的人陪伴，并拨打 120 或 110，或前往最近的急诊。
+
+
+          你很重要，请一定照顾好自己。'
+        desc: 即时危险固定话术（分类1终点）
+        selected: false
+        title: 危机固定话术
+        type: answer
+        variables: []
+      height: 257
+      id: crisis_answer
+      position:
+        x: 1430
+        y: 50
+      positionAbsolute:
+        x: 1430
+        y: 50
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        answer: '我能感觉到你现在心里很不好受，这不是你的错。
+
+
+          如果你愿意，学校心理中心的专业人员可以和你面对面聊聊。项目资料中的预约电话是 020-85280085，具体服务时间请以学校最新通知为准。如果你现在就需要有人说话，可以拨打全国统一心理援助热线 12356。
+
+
+          你不需要一个人扛着，有人愿意帮你。'
+        desc: 高风险温和转介话术（分类2终点）
+        selected: false
+        title: 温和转介话术
+        type: answer
+        variables: []
+      height: 305
+      id: warm_referral
+      position:
+        x: 1430
+        y: 250
+      positionAbsolute:
+        x: 1430
+        y: 250
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        dataset_ids:
+        - Wg0B/eFs2wOmgCCepZZ2PViW5z/Y0sNxlnuM4x/9Xjsquvp/OwdBdY5aT2IzC642
+        desc: 检索华农心晴导航知识库（仅分类6使用）。导入后请在节点中选择你的知识库。
+        query_variable_selector:
+        - '1785506775822'
+        - sys.query
+        retrieval_mode: single
+        selected: false
+        single_retrieval_config:
+          model:
+            completion_params: {}
+            mode: chat
+            model_node: qwen3.5-35b-a3b
+            name: Qwen3.5-35B-A3B
+            provider: langgenius/openai_api_compatible/openai_api_compatible
+          score_threshold: 0.3
+          top_k: 3
+        title: 知识检索
+        type: knowledge-retrieval
+      height: 135
+      id: knowledge_retrieval_01
+      position:
+        x: 1430
+        y: 540
+      positionAbsolute:
+        x: 1430
+        y: 540
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        context:
+          enabled: false
+        desc: 统一对话LLM（处理分类3强烈痛苦、分类7情绪陪伴），含会话记忆、时间感知、场景化疏导和常态化时段贴士
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.5
+          mode: chat
+          name: Qwen3.5-35B-A3B
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+        prompt_template:
+        - id: prompt-unified-llm-002
+          role: system
+          text: '你是「华农心晴导航」心理健康智能陪伴助手，服务华南农业大学学生。
+
+
+            你不是医生或心理咨询师，不提供诊断、治疗或用药建议。
+
+
+            你的职责限定在「陪伴、科普、引导、转介」四个动作内。
+
+
+
+            【用户记忆】
+
+
+            你具备上下文记忆能力，能记住本轮对话中用户之前说过的内容。
+
+
+            请在回复中自然地体现你记得用户的状况，不需要重复询问已经聊过的话题。
+
+
+
+            【当前时间】
+
+
+            现在是：{{#code_time.time#}}
+
+
+            当用户询问心理中心是否开门、能否预约等问题时，结合以下工作时间判断：
+
+
+            - 周一至周日 8:30-12:00、14:30-20:00 为工作时间
+
+
+            - 其余时间为非工作时间，告知用户下次开门时间
+
+
+
+            【规则】
+
+
+            1. 共情优先：先承接情绪，再提供信息。回复以情绪认可开头。
+
+
+            2. 边界清晰：不使用「诊断」「治疗」「治愈」等词，限定在陪伴/科普/引导/转介。
+
+
+            3. 隐私与数据：如果用户询问隐私、数据保存、个人信息处理等问题，必须按以下要点回答：(a)提醒不要发送姓名、学号、身份证号、电话、住址等身份信息；(b)说明对话内容可能按学校平台的管理规则留存和处理；(c)不承诺「绝不保存」或「完全匿名」；(d)具体数据留存政策以学校平台规则为准。
+
+
+            4. 图片与文件：当前不支持图片上传和识别功能。如果用户询问能否上传图片、发送照片、看图识别，请明确说明不支持，并建议用文字描述想表达的内容。
+
+
+            5. 长度控制：单次回复 80-150 字，避免信息过载。
+
+
+            6. 危机缓冲：如检测到风险升级信号，立即输出「我感觉到你现在很难受，请立即拨打 12356 或 120」。
+
+
+            7. 自然引导：在合适时机引导自测、预约或资源查询，用开放式邀请。
+
+
+            8. 时间感知：结合当前时间提供关怀。深夜（23:00后）提醒用户注意休息；考试周（6月/12月中旬）主动提及考试压力应对；开学季（9月初）关怀新生适应。
+
+
+
+            【策略模式】
+
+
+            - 如果用户表达强烈痛苦（级别3）：优先情绪承接和安全确认，不急于给建议。先共情，再温和询问是否愿意聊聊更多。如果用户再次表达风险信号，引导拨打12356。
+
+
+            - 如果用户表达情绪困扰（级别7）：纯倾听和共情为主，不急于给建议。如果用户主动询问应对方法，再提供1-2条轻量建议。
+
+
+            - 普通问候（如「你好」「你能做什么」）：简要自我介绍并引导用户表达需求。
+
+
+
+            【智能测评推荐】
+
+
+            如果用户在对话中多次提到睡眠问题、考试焦虑、压力过大等关键词，
+
+
+            且尚未做过自测，可以在回复末尾自然提议：
+
+
+            「你最近多次提到这些困扰，要不要做个 2 分钟的焦虑自测？这可能帮助你更好地了解自己的状态。」
+
+
+            每次推荐只提一次，不要重复催促。
+
+
+
+            【危机后跟进】
+
+
+            若对话历史中出现过危机信号，本轮回复必须：
+
+
+            a) 先温和确认用户当前的安全状况（如「你还好吗？」）
+
+
+            b) 再次提醒可以随时联系 12356 或校内心理中心
+
+
+            c) 确认安全后再提供普通支持
+
+
+
+            【校园场景化定向疏导】
+
+
+            如果用户提及以下校园场景，按对应方案疏导：
+
+
+            ▸ final_exam 期末备考：共情「期末连轴转确实容易到极限」→番茄工作法25+5+长休15→睡前478呼吸(4吸7屏8呼)×3→今日清单限2件+明天清单减负→心理中心预约电话020-85280085
+
+            ▸ kaoyan 考研冲刺：共情「冲刺期的孤独自我怀疑大多数人都有」→完成下限(今天看10页也行)→每晚10:30「结束仪式」收资料→每周1次30min户外快走阳光调节血清素→联系心理中心了解近期减压活动
+
+            ▸ job_hunt 就业秋招春招：共情「石沉大海+复盘内耗的消耗我理解」→微动作拆分(今天投1份/改1行简历/看1篇面经)→投递上限每天≤5份防拒绝过载→固定吐槽时间+不评判→联系心理中心了解就业心理支持活动
+
+            ▸ thesis/graduation 论文毕业：共情「卡壳+答辩+告别焦虑叠在一起容易喘不过气」→烂初稿法(先写一版完全不修改的草稿)→和导师沟通前列3个具体问题→允许自己偶尔摆烂半天→联系心理中心了解毕业季支持活动
+
+            ▸ orientation/military 开学军训：共情「新环境节奏人际全变了不适应正常」→每日小确幸记录→同宿舍同排1个人先搭话→补水防晒→联系心理中心了解新生适应活动
+
+            ▸ dormitory 寝室矛盾：共情「空间小作息不同摩擦普遍不是你难相处」→「我信息」沟通公式：当XX时我感觉XX因为XX我希望XX→不在宿舍时间延长缓冲→宿管/班导师/心理中心求助不是软弱
+
+            ▸ relationship 恋爱分手：共情「钝痛反复想念真实不用逼自己立刻出来」→三不原则：不深夜视奸不翻记录不冲动发长文→原共做事件替换新版本→允许哭允许效率低
+
+            ▸ fail_exam 挂科：共情「自我否定羞耻感很难受但≠你不行」→先查补考重修时间流程写下来把情绪转行动→找任课老师/助教问失分点靶向准备→两周以上走不出预约心理中心
+
+            ▸ class_club 班级社团：共情「配合又怕被忽视拉扯很耗能量」→责任二分法(我的责任100%/别人的期待不内耗)→每周2小时没人找得到我的纯充电时间→独处是自我保护不是孤僻
+
+            ▸ other：通用共情三步法，但尽量校园语境具体化
+
+
+
+            【常态化关怀 · 特殊时段主动贴士】
+
+
+            根据当前时间命中以下任何时段，在回复末尾自然加「🌿 近期小贴士」段落，不用等用户问：
+
+            • 考试周（6月第2周-7月第1周 / 12月第3周-1月第2周）：「🌿 近期小贴士｜考试周到了，记得劳逸结合。睡前478呼吸×3（吸气4秒→屏气7秒→呼气8秒），明早脑子更清楚。如果压力持续难以缓解，可拨打心理中心预约电话020-85280085。」
+
+            • 开学季（9月1日-9月20日 / 2月下旬-3月上旬）：「🌿 近期小贴士｜开学适应期，如果需要可以致电心理中心020-85280085了解新生适应相关支持。一个人吃饭走路觉得尴尬？其实大家都在关注自己，没人在看你哦。」
+
+            • 毕业季（5月15日-6月30日）：「🌿 近期小贴士｜毕业季如果论文压力、离别情绪或生涯焦虑让你喘不过气，可以预约心理中心聊聊。写论文卡壳先写烂初稿再说。」
+
+            • 考研冲刺（11月1日-12月24日）：「🌿 近期小贴士｜考研冲刺期如果压力大，可以致电020-85280085预约心理中心聊聊。学累了去操场走5分钟，大脑会感谢你。」
+
+            • 秋招季（9月20日-11月30日）：「🌿 近期小贴士｜秋招高峰期如果面试焦虑或海投压力大，可以致电心理中心聊聊。投递记得设上限，海投会让拒绝感翻好几倍。」
+
+            • 学校活动信息：只有知识库提供了明确活动名称、日期和来源时才可介绍；不得根据月份自行声称存在“心理关怀月”或具体活动。
+
+            • 普通时段：不强制贴士。仅当用户连续两轮表达负面情绪时，可温和询问是否需要查看心理中心的官方预约方式；不得承诺工作流中不存在的树洞投稿、老师回复或实时可预约时段。
+
+
+            【小贴士去重规则】重要：如果正文的场景疏导中已经提到了预约电话（020-85280085），小贴士中不要再重复电话号码，改为「有需要随时联系心理中心」等简短提醒，避免同一段回复里出现两次电话号码。
+
+
+            【回复结构与控制】
+
+
+            ① 反映情绪1句 → ② 确认感受/正常化1句 → ③ 场景定向建议1-2条（具体可执行）→ ④【命中时段】小贴士 → ⑤【必要时】官方预约方式引导（最多1次/话题）
+
+
+            分层回应：轻度→共情+1建议+开放；中度→共情+2场景建议+问要不要聊更多；强烈(未到危机)→深度共情+建议联系身边人+心理中心可预约
+
+
+            回复控制在 80-150 字，语气温和自然，不堆砌emoji。'
+        selected: false
+        title: 统一对话LLM
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+        error_strategy: fail-branch
+      height: 133
+      id: llm
+      position:
+        x: 1780
+        y: 486
+      positionAbsolute:
+        x: 1780
+        y: 486
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        desc: 从核心对话结果中提取情绪/困扰/摘要，用于会话记忆
+        instruction: '请从用户原话中提取情绪和核心困扰，并结合助手正式回复生成简短摘要。
+
+
+          用户原话：{{#sys.query#}}
+
+          助手正式回复：{{#strip_summary.text#}}
+
+
+          提取字段：
+
+          - mood：仅根据用户原话判断当前情绪（1-2个词，如焦虑/低落/平静）
+
+          - issue：仅根据用户原话概括核心困扰（1-2个词，如学业压力/人际关系）
+
+          - summary：本轮对话的要点，包括讨论了什么、给了什么建议、是否提及了时段服务
+
+
+          不得把助手提出的猜测当成用户事实；信息不明确时对应字段留空。'
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.1
+          mode: chat
+          name: Qwen3.5-35B-A3B
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+        parameters:
+        - description: 情绪状态
+          name: mood
+          required: false
+          type: string
+        - description: 核心困扰
+          name: issue
+          required: false
+          type: string
+        - description: 对话摘要
+          name: summary
+          required: false
+          type: string
+        query:
+        - '1785506775822'
+        - sys.query
+        reasoning_mode: prompt
+        selected: false
+        title: 记忆提取
+        type: parameter-extractor
+        variables: []
+        vision:
+          enabled: false
+      height: 117
+      id: memory_extract_v2
+      position:
+        x: 2130
+        y: 486
+      positionAbsolute:
+        x: 2130
+        y: 486
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        desc: 更新会话记忆变量（user_mood/core_issue/counseling）
+        items:
+        - input_type: variable
+          operation: over-write
+          value:
+          - memory_extract_v2
+          - mood
+          variable_selector:
+          - conversation
+          - user_mood
+          write_mode: over-write
+        - input_type: variable
+          operation: over-write
+          value:
+          - memory_extract_v2
+          - issue
+          variable_selector:
+          - conversation
+          - core_issue
+          write_mode: over-write
+        - input_type: variable
+          operation: over-write
+          value:
+          - memory_extract_v2
+          - summary
+          variable_selector:
+          - conversation
+          - counseling
+          write_mode: over-write
+        selected: false
+        title: 记忆变量赋值
+        type: assigner
+        version: '2'
+      height: 171
+      id: memory_assign_v2
+      position:
+        x: 2480
+        y: 486
+      positionAbsolute:
+        x: 2480
+        y: 486
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        answer: '{{#strip_summary.text#}}'
+        desc: 输出统一对话LLM的回复
+        selected: false
+        title: 对话回复
+        type: answer
+        variables: []
+      height: 132
+      id: answer
+      position:
+        x: 2830
+        y: 486
+      positionAbsolute:
+        x: 2830
+        y: 486
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - knowledge_retrieval_01
+          - result
+        desc: 校园服务LLM（处理分类6，基于知识库回答，心理老师语气）
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: Qwen3.5-35B-A3B
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+        prompt_template:
+        - id: prompt-llm-kb-001
+          role: system
+          text: '你是「华农心晴导航」校园心理服务AI助手，不是真人心理老师、心理咨询师或医生。
+
+            学生在向你咨询校园心理服务，你用自然、温和的语气回答，就像在办公室里和学生聊天一样。
+
+
+            【你的基础知识库】以下信息你已牢记，无需依赖外部检索即可回答：
+
+            - 预约方式：线上通过「华南农业大学心理中心」公众号 →「心理服务」→「移动心理」，用学号和门户密码登录预约；电话预约拨打 020-85280085 或 85283422；现场预约到华山新学生活动中心三楼308咨询接待室
+
+            - 工作时间：周一至周日 8:30-12:00、14:30-20:00（学期内）
+
+            - 地址：华山新学生活动中心三楼308
+
+            - 电话：020-85280085 / 85283422
+
+            - 费用：项目资料记录为在校学生免费，回答时应提醒以学校最新通知为准
+
+            - 保密：咨询通常遵循保密原则，具体边界以咨询前知情说明和学校现行制度为准；涉及本人或他人安全风险时可能启动必要干预
+
+            - 取消预约：规则可能调整，建议通过官方平台或电话确认
+
+            - 服务规则：费用、开放时间和保密边界均以学校心理中心最新说明为准
+
+
+            【外部知识库参考】（补充信息，可能有也可能没有）：
+
+            {{#knowledge_retrieval_01.result#}}
+
+
+            【回答规则】
+
+            1. 优先用基础知识库回答常见问题（预约、电话、地址、时间、收费、保密），不需要等知识库结果
+
+            2. 如果知识库有额外信息且与基础知识库一致，可以引用；如果知识库为空或不一致，以基础知识库为准
+
+            3. 如果学生问的问题基础知识库和知识库都覆盖不了，老实说「这个我暂时还不太确定，建议你直接打电话 020-85280085 问问心理中心的老师」
+
+            4. 回复简洁自然，像聊天一样，2-4句话即可
+
+            5. 开头顺带关心一下，比如「这个确实挺重要的，我帮你看看」
+
+            6. 根据当前时间 {{#code_time.time#}} 判断心理中心是否在开放时间，如果不在就提醒下次开门时间
+
+
+            不要在回复末尾附加任何形式的对话摘要、总结或回顾。说完就结束。'
+        selected: false
+        title: 校园服务LLM
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+        error_strategy: fail-branch
+      height: 117
+      id: llm_kb
+      position:
+        x: 1780
+        y: 540
+      positionAbsolute:
+        x: 1780
+        y: 540
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        answer: '{{#llm_kb.text#}}'
+        desc: 输出校园服务LLM的回复
+        selected: false
+        title: 校园服务回复
+        type: answer
+        variables: []
+      height: 132
+      id: answer_kb
+      position:
+        x: 2130
+        y: 540
+      positionAbsolute:
+        x: 2130
+        y: 540
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        code: "def main(query: str, step: str, scores: str, existing_level: str) -> dict:\n    questions = [\n        \"过去两周，你感到紧张、焦虑或烦躁的频率是？\",\n        \"过去两周，你无法停止或控制担忧的频率是？\",\n        \"过去两周，你对各种事情担忧过多的频率是？\",\n        \"过去两周，你很难放松下来的频率是？\",\n        \"过去两周，你因为不安而难以静坐的频率是？\",\n        \"过去两周，你变得容易烦恼或急躁的频率是？\",\n        \"过去两周，你感到害怕，仿佛将有可怕事情发生的频率是？\",\n    ]\n    options = \"请回复：0 完全没有｜1 有几天｜2 一半以上天数｜3 几乎每天\"\n    q = (query or \"\").strip()\n    try:\n        current_step = int(step or \"0\")\n    except Exception:\n        current_step = 0\n    saved = [x for x in (scores or \"\").split(\",\") if x in (\"0\", \"1\", \"2\", \"3\")]\n\n    if current_step < 0 or current_step > 7 or len(saved) != max(current_step - 1, 0):\n        current_step, saved = 0, []\n\n    if current_step == 0:\n        text = \"这是一个过去两周焦虑感受的7题筛查，不是医学诊断。我会一次问一题。\\n\\n第1/7题：\" + questions[0] + \"\\n\" + options\n        return {\"result\": text, \"step\": \"1\", \"scores\": \"\", \"level\": existing_level or \"\"}\n\n    if any(word in q for word in (\"退出\", \"取消\", \"不做了\", \"停止测试\", \"结束测试\")):\n        return {\"result\": \"好的，已退出本次GAD-7自测，之前未完成的答案不会用于计分。\", \"step\": \"0\", \"scores\": \"\", \"level\": existing_level or \"\"}\n\n    normalized = q.replace(\" \", \"\").replace(\"。\", \"\").replace(\"，\", \"\")\n    mapping = {\n        \"0\": 0, \"完全没有\": 0, \"从来没有\": 0, \"没有\": 0, \"从不\": 0,\n        \"1\": 1, \"有几天\": 1, \"偶尔\": 1, \"很少\": 1,\n        \"2\": 2, \"一半以上\": 2, \"超过一半\": 2, \"经常\": 2,\n        \"3\": 3, \"几乎每天\": 3, \"每天\": 3, \"总是\": 3,\n    }\n    score = mapping.get(normalized)\n    if score is None:\n        return {\"result\": f\"我还没识别出你的选项。第{current_step}/7题请按下面格式回答：\\n{options}\", \"step\": str(current_step), \"scores\": \",\".join(saved), \"level\": existing_level or \"\"}\n\n    saved.append(str(score))\n    if current_step < 7:\n        next_step = current_step + 1\n        text = f\"已记录。\\n\\n第{next_step}/7题：{questions[next_step - 1]}\\n{options}\"\n        return {\"result\": text, \"step\": str(next_step), \"scores\": \",\".join(saved), \"level\": existing_level or \"\"}\n\n    total = sum(int(x) for x in saved)\n    if total <= 4:\n        level = \"无或极轻微\"\n        advice = \"目前焦虑感受不明显，可以继续保持规律作息并留意变化。\"\n    elif total <= 9:\n        level = \"轻度\"\n        advice = \"可以尝试规律睡眠、适量运动和放松练习；若持续困扰，可预约心理咨询。\"\n    elif total <= 14:\n        level = \"中度\"\n        advice = \"建议预约学校心理咨询，与专业人员进一步聊聊近期影响。\"\n    else:\n        level = \"重度\"\n        advice = \"建议尽快联系学校心理中心或其他专业机构进一步评估。\"\n    text = f\"本次GAD-7总分为 {total}/21，属于{level}范围。{advice}\\n\\n这个结果只用于筛查，不能替代诊断。如果你现在有伤害自己或无法保证安全的想法，请立即联系身边可信任的人，并拨打12356、120或110。\"\n    return {\"result\": text, \"step\": \"0\", \"scores\": \"\", \"level\": level}"
+        code_language: python3
+        desc: 确定性GAD-7状态机；逐题保存题号和分数，代码计分，不依赖模型回忆
+        outputs:
+          level:
+            children: null
+            type: string
+          result:
+            children: null
+            type: string
+          scores:
+            children: null
+            type: string
+          step:
+            children: null
+            type: string
+        selected: false
+        title: GAD-7逐题状态机
+        type: code
+        variables:
+        - value_selector:
+          - '1785506775822'
+          - sys.query
+          variable: query
+        - value_selector:
+          - conversation
+          - gad7_step
+          variable: step
+        - value_selector:
+          - conversation
+          - gad7_scores
+          variable: scores
+        - value_selector:
+          - conversation
+          - last_assessment_level
+          variable: existing_level
+      height: 133
+      id: llm_selftest_01
+      position:
+        x: 1430
+        y: 740
+      positionAbsolute:
+        x: 1430
+        y: 740
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        code: "def main(result: str, step: str, scores: str, level: str) -> dict:\n    return {\"result\": result or \"\", \"step\": step or \"0\", \"scores\": scores or \"\", \"level\": level or \"\"}"
+        code_language: python3
+        desc: 统一GAD-7状态机输出，供会话变量赋值和回答节点使用
+        outputs:
+          level:
+            children: null
+            type: string
+          result:
+            children: null
+            type: string
+          scores:
+            children: null
+            type: string
+          step:
+            children: null
+            type: string
+        selected: false
+        title: GAD-7输出整理
+        type: code
+        variables:
+        - value_selector:
+          - llm_selftest_01
+          - result
+          variable: result
+        - value_selector:
+          - llm_selftest_01
+          - step
+          variable: step
+        - value_selector:
+          - llm_selftest_01
+          - scores
+          variable: scores
+        - value_selector:
+          - llm_selftest_01
+          - level
+          variable: level
+      height: 97
+      id: code_gad7
+      position:
+        x: 1780
+        y: 740
+      positionAbsolute:
+        x: 1780
+        y: 740
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        answer: '{{#code_gad7.result#}}'
+        desc: 输出GAD-7自测的回复
+        selected: false
+        title: 自测回复
+        type: answer
+        variables: []
+      height: 132
+      id: answer_selftest_01
+      position:
+        x: 2130
+        y: 740
+      positionAbsolute:
+        x: 2130
+        y: 740
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        code: "def main(query: str, step: str, answers: str) -> dict:\n    questions = [\n        \"你更喜欢 A.和很多人在一起 B.一个人待着\",\n        \"你更偏向 A.实际具体的事物 B.抽象概念和想法\",\n        \"做决定时你更依赖 A.逻辑和分析 B.感受和价值观\",\n        \"你更喜欢 A.有计划有安排 B.随性灵活\",\n        \"社交后你通常 A.精力充沛 B.需要独处充电\",\n        \"你更关注 A.眼前的细节 B.未来的可能性\",\n        \"你更看重 A.公平和道理 B.人情和和谐\",\n        \"你更喜欢 A.按计划行事 B.随时调整\",\n        \"你更倾向于 A.主动发起对话 B.等别人来找你\",\n        \"学习新东西时你喜欢 A.按步骤来 B.先看整体\",\n        \"批评别人时你更看重 A.分析问题在哪 B.考虑对方感受\",\n        \"你的桌面通常是 A.整齐有序 B.比较随意\",\n        \"你更喜欢 A.热闹的聚会 B.小范围的深入交流\",\n        \"你更相信 A.过往的经验 B.自己的直觉\",\n        \"你更欣赏 A.坦诚直接的表达 B.委婉温和的表达\",\n        \"你更喜欢 A.事情一件件做完 B.多件事情同时进行\",\n        \"你更倾向于 A.先想再说 B.边说边想\",\n        \"你更关注 A.事实和数据 B.故事和意义\",\n        \"发生冲突时你先想 A.谁对谁错 B.大家怎么想\",\n        \"你更喜欢 A.有明确截止日期 B.随时可变化的安排\",\n        \"认识新朋友时你 A.比较主动 B.比较被动\",\n        \"你更擅长 A.记住具体细节 B.把握整体印象\",\n        \"你更看重 A.事情的结果 B.过程中的感受\",\n        \"旅行时你更喜欢 A.提前规划好行程 B.到了再说\",\n    ]\n    q = (query or \"\").strip().upper().replace(\" \", \"\")\n    try:\n        current_step = int(step or \"0\")\n    except Exception:\n        current_step = 0\n    saved = [x for x in (answers or \"\").upper().split(\",\") if x in (\"A\", \"B\")]\n    if current_step < 0 or current_step > 24 or len(saved) != max(current_step - 1, 0):\n        current_step, saved = 0, []\n\n    if current_step == 0:\n        text = \"下面是24题性格偏好小游戏，不是专业人格测验或诊断。请按第一感觉回答A或B。\\n\\n第1/24题：\" + questions[0]\n        return {\"result\": text, \"step\": \"1\", \"answers\": \"\", \"status\": \"进行中\"}\n\n    if any(word in q for word in (\"退出\", \"取消\", \"不做了\", \"停止测试\", \"结束测试\")):\n        return {\"result\": \"好的，已退出本次性格偏好小游戏。\", \"step\": \"0\", \"answers\": \"\", \"status\": \"未开始\"}\n\n    a_values = (\"A\", \"选A\", \"A。\", \"A.\", \"前者\", \"第一个\")\n    b_values = (\"B\", \"选B\", \"B。\", \"B.\", \"后者\", \"第二个\")\n    choice = \"A\" if q in a_values else \"B\" if q in b_values else \"\"\n    if not choice:\n        return {\"result\": f\"我还没识别出你的选择。第{current_step}/24题请只回复 A 或 B：\\n{questions[current_step - 1]}\", \"step\": str(current_step), \"answers\": \",\".join(saved), \"status\": \"进行中\"}\n\n    saved.append(choice)\n    if current_step < 24:\n        next_step = current_step + 1\n        return {\"result\": f\"已记录。\\n\\n第{next_step}/24题：{questions[next_step - 1]}\", \"step\": str(next_step), \"answers\": \",\".join(saved), \"status\": \"进行中\"}\n\n    def dimension(indices, a_letter, b_letter):\n        return a_letter if sum(1 for i in indices if saved[i] == \"A\") >= 3 else b_letter\n    type_code = (\n        dimension((0, 4, 8, 12, 16, 20), \"E\", \"I\") +\n        dimension((1, 5, 9, 13, 17, 21), \"S\", \"N\") +\n        dimension((2, 6, 10, 14, 18, 22), \"T\", \"F\") +\n        dimension((3, 7, 11, 15, 19, 23), \"J\", \"P\")\n    )\n    descriptions = {\n        \"INTJ\": \"偏好独立思考、关注整体并按计划推进。\", \"INTP\": \"偏好探索原理、保持开放和灵活。\",\n        \"ENTJ\": \"偏好主动组织、关注目标和效率。\", \"ENTP\": \"偏好交流新想法并探索多种可能。\",\n        \"INFJ\": \"偏好深入理解他人，并以长远视角行动。\", \"INFP\": \"重视个人价值、想象力和内在感受。\",\n        \"ENFJ\": \"关注人与合作，常愿意主动支持他人。\", \"ENFP\": \"热衷新体验、人际互动和创意表达。\",\n        \"ISTJ\": \"偏好可靠、具体且有秩序的做事方式。\", \"ISFJ\": \"关注细节和他人需要，做事较为稳妥。\",\n        \"ESTJ\": \"偏好清晰规则、实际结果和组织执行。\", \"ESFJ\": \"重视关系和协作，常留意他人的感受。\",\n        \"ISTP\": \"偏好独立分析和处理现实中的具体问题。\", \"ISFP\": \"重视个人体验，通常温和且保持弹性。\",\n        \"ESTP\": \"偏好行动、现场应变和实际挑战。\", \"ESFP\": \"偏好互动与体验，容易关注当下氛围。\",\n    }\n    desc = descriptions.get(type_code, \"你呈现出一组独特而均衡的偏好。\")\n    text = f\"你的结果偏向 {type_code}：{desc}\\n\\n这只是非专业的性格偏好小游戏，结果会受当下状态和题目设计影响，不宜用于诊断、选专业或重要决策。\"\n    return {\"result\": text, \"step\": \"0\", \"answers\": \"\", \"status\": \"已完成\"}"
+        code_language: python3
+        desc: 确定性24题性格偏好状态机；逐题保存答案并按交错维度正确计分
+        outputs:
+          answers:
+            children: null
+            type: string
+          result:
+            children: null
+            type: string
+          status:
+            children: null
+            type: string
+          step:
+            children: null
+            type: string
+        selected: false
+        title: 性格偏好逐题状态机
+        type: code
+        variables:
+        - value_selector:
+          - '1785506775822'
+          - sys.query
+          variable: query
+        - value_selector:
+          - conversation
+          - personality_step
+          variable: step
+        - value_selector:
+          - conversation
+          - personality_answers
+          variable: answers
+      height: 117
+      id: llm_personality_01
+      position:
+        x: 1430
+        y: 940
+      positionAbsolute:
+        x: 1430
+        y: 940
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        code: "def main(result: str, step: str, answers: str, status: str) -> dict:\n    return {\"result\": result or \"\", \"step\": step or \"0\", \"answers\": answers or \"\", \"status\": status or \"未开始\"}"
+        code_language: python3
+        desc: 统一性格偏好状态机输出，供会话变量赋值和回答节点使用
+        outputs:
+          answers:
+            children: null
+            type: string
+          result:
+            children: null
+            type: string
+          status:
+            children: null
+            type: string
+          step:
+            children: null
+            type: string
+        selected: false
+        title: 性格偏好输出整理
+        type: code
+        variables:
+        - value_selector:
+          - llm_personality_01
+          - result
+          variable: result
+        - value_selector:
+          - llm_personality_01
+          - step
+          variable: step
+        - value_selector:
+          - llm_personality_01
+          - answers
+          variable: answers
+        - value_selector:
+          - llm_personality_01
+          - status
+          variable: status
+      height: 97
+      id: code_personality
+      position:
+        x: 1780
+        y: 940
+      positionAbsolute:
+        x: 1780
+        y: 940
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        answer: '{{#code_personality.result#}}'
+        desc: 输出人格测试的回复
+        selected: false
+        title: 人格测试回复
+        type: answer
+        variables: []
+      height: 132
+      id: answer_personality_01
+      position:
+        x: 2130
+        y: 940
+      positionAbsolute:
+        x: 2130
+        y: 940
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        code: "def main(query: str, current_time: str) -> dict:\n    teachers = [\n        {\"name\": \"梁小伊\", \"title\": \"教授/国家二级心理咨询师\", \"specialty\": \"环境适应、压力应对、人际交往、职业规划、抑郁焦虑、情感障碍、异常心理、危机识别干预\"},\n        {\"name\": \"刘信洪\", \"title\": \"西南师大心理学硕士/清华教育博士\", \"specialty\": \"认知心理、精神分析、学业困惑、人际困惑、情感困惑\"},\n        {\"name\": \"王伍香\", \"title\": \"国家二级心理咨询师(2014)\", \"specialty\": \"各年龄段学生心理\"},\n        {\"name\": \"成华青\", \"title\": \"中山大学法学硕士/副教授/国家三级心理咨询师\", \"specialty\": \"个体成长、亲子关系\"},\n        {\"name\": \"陈巍\", \"title\": \"国家心理咨询师/职业指导师\", \"specialty\": \"生涯规划、人际交往、学业压力、情绪情感\"},\n        {\"name\": \"陈智欣\", \"title\": \"广州中医药大学七年制本硕中医学/国家二级心理咨询师\", \"specialty\": \"新生适应、亲密关系、情绪管理、自我成长\"},\n        {\"name\": \"马晓莉\", \"title\": \"国家二级心理咨询师\", \"specialty\": \"情绪情感、人际关系、家庭问题\"},\n        {\"name\": \"苏安梅\", \"title\": \"外语学院教师/13年教学/国家二级心理咨询师/正面管教讲师\", \"specialty\": \"自我成长、亲子关系、家庭关系、情绪管理\"},\n        {\"name\": \"陈坤钰\", \"title\": \"本科广外应用心理学/硕士华师应用心理学/国家二级心理咨询师\", \"specialty\": \"自我成长、人际关系、情绪管理\"},\n        {\"name\": \"李佳媛\", \"title\": \"国家三级心理咨询师/国家三级职业指导师\", \"specialty\": \"学习问题、人际关系、职业规划\"},\n        {\"name\": \"梁娟\", \"title\": \"本科河南师大心理学/硕士华师心理学/国家二级心理咨询师\", \"specialty\": \"自我成长、情绪情感、亲子关系、亲密关系\"},\n        {\"name\": \"石如彬\", \"title\": \"硕士华师心理学院/国家二级心理咨询师\", \"specialty\": \"生涯规划、人际交往、学业压力、情绪情感\"},\n        {\"name\": \"何凯\", \"title\": \"经管学院辅导员/国家二级心理咨询师/绘画心理分析师\", \"specialty\": \"辅导员支持视角\"},\n        {\"name\": \"严颖\", \"title\": \"数信学院辅导员/福建师大发展与教育心理学硕士/国家二级心理咨询师\", \"specialty\": \"新生适应、恋爱情感、人际关系、团体辅导\"},\n        {\"name\": \"叶昶\", \"title\": \"华南师大应用心理硕士\", \"specialty\": \"新生适应、情绪管理、人际关系、家庭问题\"},\n        {\"name\": \"陈丽冰\", \"title\": \"国家二级心理咨询师/国家二级职业指导师\", \"specialty\": \"个体成长、人际关系、职业规划\"},\n        {\"name\": \"叶晓燕\", \"title\": \"国家二级心理咨询师/初级心理治疗师\", \"specialty\": \"发展性咨询、情绪情感、人际关系、学习问题、异常心理识别\"},\n    ]\n\n    if any(kw in query for kw in ['男老师', '女老师', '男性咨询师', '女性咨询师']):\n        return {\"result\": \"当前公开资料没有经过核实的老师性别字段，我不能根据姓名推测。建议联系心理中心说明你的偏好，由工作人员在可选范围内协助匹配。\"}\n\n    booking_kw = ['预约', '怎么约', '如何预约', '预约流程', '预约方式', '线上预约', '公众号']\n    if any(kw in query for kw in booking_kw):\n        return {\"result\": \"预约心理咨询挺方便的，有三种方式：\\n\\n线上预约的话，打开「华南农业大学心理中心」公众号，点「心理服务」→「移动心理」，用学号和门户密码登录，就能看到可以预约的时段和老师了。\\n\\n也可以打电话预约，号码是 020-85280085 或 85283422，工作时间每天早上 8:30 到 12:00、下午 2:30 到 8:00 都有人接。\\n\\n或者直接来华山新学生活动中心三楼 308 咨询接待室，学期内上班时间都可以现场预约。\\n\\n具体费用、开放时间、保密边界和取消规则可能调整，建议预约时以心理中心最新说明为准。\"}\n\n    if any(kw in query for kw in ['收费', '要钱', '免费', '费用']):\n        return {\"result\": \"根据当前项目资料，在校学生心理咨询通常免费；具体请以心理中心最新通知或预约时的说明为准。\"}\n\n    if any(kw in query for kw in ['保密', '辅导员', '泄露', '隐私']):\n        return {\"result\": \"心理咨询通常遵循保密原则，具体保密边界会在咨询前进行知情说明；如果存在危及本人或他人安全等情况，可能依法依规启动必要干预。建议预约时向心理中心确认现行规定。\"}\n\n    if any(kw in query for kw in ['电话', '地址', '在哪', '哪里', '几点', '时间', '开门']):\n        return {\"result\": \"心理中心在华山新学生活动中心三楼 308，电话是 020-85280085 或 85283422。项目资料中的工作时间为每天8:30-12:00、14:30-20:00；节假日和寒暑假可能调整，出发前建议电话确认。\"}\n\n    for t in teachers:\n        if t['name'] in query:\n            return {'result': f\"关于 {t['name']} 老师：\\n\\n{t['title']}\\n\\n擅长的方向是：{t['specialty']}\\n\\n如果想约这位老师，可以打电话 020-85280085 说明你的需求，接线人员会帮你看看能不能安排。\"}\n\n    # 处理纠正场景：如果用户说「不是/不对/搞错了」且 query 较短，尝试提取有效关键词\n    neg_words = ['不是', '不对', '搞错了', '错了', '我说的是', '是']\n    if any(nw in query for nw in neg_words) and len(query) < 30:\n        # 这是一个纠正消息，尝试从 query 中提取关键词直接匹配\n        pass  # 继续往下走正常匹配流程\n    match_kw = ['焦虑', '抑郁', '睡眠', '失眠', '人际', '情绪', '适应', '职业', '生涯', '学业', '压力', '家庭', '亲子', '情感', '恋爱', '成长', '危机', '胃口', '食欲', '饮食', '躯体', '身体', '焦躁', '躁', '狂躁', '躁郁']\n    for kw in match_kw:\n        if kw in query:\n            matched = [t for t in teachers if kw in t['specialty']]\n            if matched:\n                lines = [f\"根据你说的「{kw}」这个方向，我帮你找了几位这方面比较擅长的老师：\\n\"]\n                for m in matched[:3]:\n                    lines.append(f\"{m['name']} 老师 | {m['title']}\\n  擅长：{m['specialty']}\\n\")\n                lines.append(\"如果想预约的话，可以打电话 020-85280085，接线人员会帮你匹配最合适的时段。\\n\")\n                return {\"result\": \"\".join(lines)}\n            else:\n                lines = [f\"你提到的「{kw}」这个方向，目前公开的信息里没有完全匹配的老师。不过我把所有老师都列出来，你看看有没有觉得合适的：\\n\\n\"]\n                for i, t in enumerate(teachers, 1):\n                    lines.append(f\"{i}. {t['name']} 老师 | {t['title']} | {t['specialty']}\\n\")\n                lines.append(\"\\n建议打电话 020-85280085 说明你的需求，接线人员会帮你匹配最合适的老师。\\n\")\n                return {\"result\": \"\".join(lines)}\n\n    rec_kw = ['推荐', '适合', '合适', '擅长']\n    if any(kw in query for kw in rec_kw):\n        lines = [\"这是我们心理中心目前所有老师的名单，你可以看看有没有觉得合适的：\\n\\n\"]\n        for i, t in enumerate(teachers, 1):\n            lines.append(f\"{i}. {t['name']} 老师 | {t['title']} | {t['specialty']}\\n\")\n        lines.append(\"\\n如果想预约，打电话 020-85280085，接线人员会帮你匹配最合适的老师。\\n\")\n        return {\"result\": \"\".join(lines)}\n\n    list_kw = ['所有', '全部', '有哪些', '名录', '名单', '展示', '列出', '几个', '多少', '介绍', '咨询师']\n    if any(kw in query for kw in list_kw):\n        lines = [\"我们心理中心目前有 17 位兼职心理咨询师，这是他们的名单：\\n\\n\"]\n        for i, t in enumerate(teachers, 1):\n            lines.append(f\"{i}. {t['name']} 老师 | {t['title']} | {t['specialty']}\\n\")\n        lines.append(\"\\n具体排班是心理中心统一安排的，预约的时候接线人员会帮你匹配合适的老师和时段。如果想预约的话，打电话 020-85280085 或者在公众号上预约都可以。\\n\")\n        return {\"result\": \"\".join(lines)}\n\n    return {\"result\": \"关于心理老师，你想了解哪方面呢？我可以帮你查查某位老师擅长的方向，也可以按你遇到的问题帮你推荐合适的老师，或者直接列出所有老师的名单给你看看。\"}\n"
+        code_language: python3
+        desc: 心理老师信息查询与预约引导（本地数据，不调LLM，无审核风险）
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: 心理老师查询（代码）
+        type: code
+        variables:
+        - value_selector:
+          - '1785506775822'
+          - sys.query
+          variable: query
+        - value_selector:
+          - code_time
+          - time
+          variable: current_time
+      height: 121
+      id: code_teacher_service
+      position:
+        x: 1430
+        y: 1140
+      positionAbsolute:
+        x: 1430
+        y: 1140
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        answer: '{{#code_teacher_service.result#}}'
+        desc: 输出心理老师查询结果
+        selected: false
+        title: 老师查询回复
+        type: answer
+        variables: []
+      height: 132
+      id: answer_teacher
+      position:
+        x: 1780
+        y: 1140
+      positionAbsolute:
+        x: 1780
+        y: 1140
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        code: "def main(query: str, current_step: str, answers: str, current_count: str) -> dict:\n    q = (query or \"\").strip()\n    try:\n        step = int(current_step or \"0\")\n    except Exception:\n        step = 0\n    try:\n        count = max(int(current_count or \"0\"), 0)\n    except Exception:\n        count = 0\n    saved = (answers or \"\").split(\"|||\") if answers else []\n    if step < 0 or step > 3 or len(saved) != max(step - 1, 0):\n        step, saved = 0, []\n\n    if step == 0:\n        return {\"result\": \"我们做一个3题快速心情打卡吧。\\n\\n第1/3题：你现在的情绪温度是多少？请回复0-10分，0表示非常低落，10表示状态很好。\", \"step\": \"1\", \"answers\": \"\", \"count\": str(count)}\n\n    if any(word in q for word in (\"退出\", \"取消\", \"不做了\", \"停止打卡\", \"结束打卡\")):\n        return {\"result\": \"好的，已退出本次心情打卡。\", \"step\": \"0\", \"answers\": \"\", \"count\": str(count)}\n\n    if step == 1:\n        if not q.isdigit() or not 0 <= int(q) <= 10:\n            return {\"result\": \"请输入0到10之间的整数。例如：6。\\n\\n第1/3题：你现在的情绪温度是多少？\", \"step\": \"1\", \"answers\": \"\", \"count\": str(count)}\n        saved = [q]\n        return {\"result\": \"已记录。\\n\\n第2/3题：最近有什么事情让你比较在意？\", \"step\": \"2\", \"answers\": \"|||\".join(saved), \"count\": str(count)}\n\n    clean = q.replace(\"|||\", \"｜\")[:300]\n    if not clean:\n        question = \"最近有什么事情让你比较在意？\" if step == 2 else \"今天有没有什么小事让你感觉好一点？\"\n        return {\"result\": f\"可以简单说一句就好。\\n\\n第{step}/3题：{question}\", \"step\": str(step), \"answers\": \"|||\".join(saved), \"count\": str(count)}\n\n    if step == 2:\n        saved.append(clean)\n        return {\"result\": \"谢谢你告诉我。\\n\\n第3/3题：今天有没有什么小事让你感觉好一点？如果暂时没有，也可以直接说“没有”。\", \"step\": \"3\", \"answers\": \"|||\".join(saved), \"count\": str(count)}\n\n    mood = int(saved[0])\n    concern = saved[1]\n    new_count = count + 1\n    if mood <= 3:\n        advice = \"你今天的状态偏低，先把目标放小一点，照顾好吃饭、休息和安全；如果这种状态持续或影响生活，可以联系学校心理中心。\"\n    elif mood <= 6:\n        advice = \"今天似乎有些消耗，可以给自己安排一个十分钟的放松或散步时间。\"\n    else:\n        advice = \"你今天整体状态还可以，可以留意并延续让自己感觉好一点的小事。\"\n    text = f\"第{new_count}次打卡完成：情绪温度 {mood}/10。你在意的是“{concern}”。{advice}\"\n    return {\"result\": text, \"step\": \"0\", \"answers\": \"\", \"count\": str(new_count)}"
+        code_language: python3
+        desc: 确定性3题心情打卡状态机；完成三题后才累计次数
+        outputs:
+          answers:
+            children: null
+            type: string
+          count:
+            children: null
+            type: string
+          result:
+            children: null
+            type: string
+          step:
+            children: null
+            type: string
+        selected: false
+        title: 快速心情打卡状态机
+        type: code
+        variables:
+        - variable: query
+          value_selector:
+          - '1785506775822'
+          - sys.query
+          value_type: string
+        - variable: current_step
+          value_selector:
+          - conversation
+          - light_step
+          value_type: string
+        - variable: answers
+          value_selector:
+          - conversation
+          - light_answers
+          value_type: string
+        - variable: current_count
+          value_selector:
+          - conversation
+          - light_checkin_count
+          value_type: string
+      height: 88
+      id: bridge_light
+      position:
+        x: 1430
+        y: 1620
+      positionAbsolute:
+        x: 1430
+        y: 1620
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        code: "def main(result: str, step: str, answers: str, count: str) -> dict:\n    return {\"result\": result or \"\", \"step\": step or \"0\", \"answers\": answers or \"\", \"count\": count or \"0\"}"
+        code_language: python3
+        desc: 统一心情打卡状态输出
+        outputs:
+          answers:
+            children: null
+            type: string
+          count:
+            children: null
+            type: string
+          result:
+            children: null
+            type: string
+          step:
+            children: null
+            type: string
+        selected: false
+        title: 心情打卡输出整理
+        type: code
+        variables:
+        - variable: result
+          value_selector:
+          - bridge_light
+          - result
+          value_type: string
+        - variable: step
+          value_selector:
+          - bridge_light
+          - step
+          value_type: string
+        - variable: answers
+          value_selector:
+          - bridge_light
+          - answers
+          value_type: string
+        - variable: count
+          value_selector:
+          - bridge_light
+          - count
+          value_type: string
+      height: 88
+      id: code_light_count
+      position:
+        x: 1430
+        y: 1740
+      positionAbsolute:
+        x: 1430
+        y: 1740
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        code: "def main(result: str) -> dict:\n    return {\"result\": result or \"\"}"
+        code_language: python3
+        desc: 输出确定性心情打卡回复，不调用大模型
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: 心情打卡回复整理
+        type: code
+        variables:
+        - variable: result
+          value_selector:
+          - code_light_count
+          - result
+          value_type: string
+      height: 133
+      id: llm_light_selfest
+      position:
+        x: 1430
+        y: 1540
+      positionAbsolute:
+        x: 1430
+        y: 1540
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        answer: '{{#llm_light_selfest.result#}}'
+        desc: 输出轻量化心情打卡的回复
+        selected: false
+        title: 轻量化打卡回复
+        type: answer
+        variables: []
+      height: 132
+      id: answer_light
+      position:
+        x: 1780
+        y: 1540
+      positionAbsolute:
+        x: 1780
+        y: 1540
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        desc: 写回打卡题号、临时答案和完成次数
+        items:
+        - input_type: variable
+          operation: over-write
+          value:
+          - code_light_count
+          - count
+          variable_selector:
+          - conversation
+          - light_checkin_count
+          write_mode: over-write
+        - input_type: variable
+          operation: over-write
+          value:
+          - code_light_count
+          - step
+          variable_selector:
+          - conversation
+          - light_step
+          write_mode: over-write
+        - input_type: variable
+          operation: over-write
+          value:
+          - code_light_count
+          - answers
+          variable_selector:
+          - conversation
+          - light_answers
+          write_mode: over-write
+        selected: false
+        title: 写入打卡进度与次数
+        type: assigner
+        version: '2'
+      height: 205
+      id: assign_light_count
+      position:
+        x: 1780
+        y: 1620
+      positionAbsolute:
+        x: 1780
+        y: 1620
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - id: strip_summary
+      type: custom
+      position:
+        x: 2080
+        y: 486
+      positionAbsolute:
+        x: 2080
+        y: 486
+      width: 244
+      height: 88
+      selected: false
+      data:
+        type: code
+        title: 去除摘要
+        desc: 用正则移除LLM输出中的对话摘要段落
+        code_language: python3
+        code: "import re\n\ndef main(llm_text: str) -> dict:\n    text = llm_text\n    # 移除「对话摘要」及之后所有内容\n    text = re.sub(r\"\\n*对话摘要[\\s\\S]*$\", \"\", text)\n    # 移除「如需专业支持」及之后所有内容\n    text = re.sub(r\"\\n*如需专业支持[\\s\\S]*$\", \"\", text)\n    # 移除「情绪状态：」开头的行及后续\n    text = re.sub(r\"\\n*情绪状态：[\\s\\S]*$\", \"\", text)\n    # 移除「讨论话题：」开头的行及后续\n    text = re.sub(r\"\\n*讨论话题：[\\s\\S]*$\", \"\", text)\n    # 移除「建议事项：」开头的行及后续\n    text = re.sub(r\"\\n*建议事项：[\\s\\S]*$\", \"\", text)\n    # 清理末尾多余空行\n    text = text.rstrip()\n    return {\"text\": text}\n"
+        variables:
+        - variable: llm_text
+          value_selector:
+          - llm
+          - text
+          value_type: string
+        outputs:
+          text:
+            type: string
+            children: null
+        selected: false
+      sourcePosition: right
+      targetPosition: left
+    - id: assign_risk_immediate
+      type: custom
+      position:
+        x: 1430
+        y: 50
+      positionAbsolute:
+        x: 1430
+        y: 50
+      width: 303
+      height: 117
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: assigner
+        version: '2'
+        title: 写入危机即时标签
+        desc: 将危机即时风险写入 anon_risk_tag
+        selected: false
+        items:
+        - input_type: constant
+          operation: over-write
+          value: crisis_immediate
+          variable_selector:
+          - conversation
+          - anon_risk_tag
+          write_mode: over-write
+    - id: assign_risk_high
+      type: custom
+      position:
+        x: 1430
+        y: 250
+      positionAbsolute:
+        x: 1430
+        y: 250
+      width: 303
+      height: 117
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: assigner
+        version: '2'
+        title: 写入高风险标签
+        desc: 将高风险信号写入 anon_risk_tag
+        selected: false
+        items:
+        - input_type: constant
+          operation: over-write
+          value: crisis_high_risk
+          variable_selector:
+          - conversation
+          - anon_risk_tag
+          write_mode: over-write
+    - id: assign_gad7_level
+      type: custom
+      position:
+        x: 1780
+        y: 740
+      positionAbsolute:
+        x: 1780
+        y: 740
+      width: 303
+      height: 205
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: assigner
+        version: '2'
+        title: 写入GAD-7进度与等级
+        desc: 持久化当前题号、已收集分数和完成后的筛查等级
+        selected: false
+        items:
+        - input_type: variable
+          operation: over-write
+          value:
+          - code_gad7
+          - level
+          variable_selector:
+          - conversation
+          - last_assessment_level
+          write_mode: over-write
+        - input_type: variable
+          operation: over-write
+          value:
+          - code_gad7
+          - step
+          variable_selector:
+          - conversation
+          - gad7_step
+          write_mode: over-write
+        - input_type: variable
+          operation: over-write
+          value:
+          - code_gad7
+          - scores
+          variable_selector:
+          - conversation
+          - gad7_scores
+          write_mode: over-write
+    - id: assign_personality_done
+      type: custom
+      position:
+        x: 1780
+        y: 940
+      positionAbsolute:
+        x: 1780
+        y: 940
+      width: 303
+      height: 205
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: assigner
+        version: '2'
+        title: 写入性格小游戏进度
+        desc: 持久化当前题号、答案和完成状态，不占用GAD-7等级变量
+        selected: false
+        items:
+        - input_type: variable
+          operation: over-write
+          value:
+          - code_personality
+          - step
+          variable_selector:
+          - conversation
+          - personality_step
+          write_mode: over-write
+        - input_type: variable
+          operation: over-write
+          value:
+          - code_personality
+          - answers
+          variable_selector:
+          - conversation
+          - personality_answers
+          write_mode: over-write
+        - input_type: variable
+          operation: over-write
+          value:
+          - code_personality
+          - status
+          variable_selector:
+          - conversation
+          - personality_test_status
+          write_mode: over-write
+    - id: fallback_error_answer
+      type: custom
+      position:
+        x: 800
+        y: 0
+      positionAbsolute:
+        x: 800
+        y: 0
+      width: 303
+      height: 257
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: answer
+        title: 系统兜底回复
+        desc: 当任何 LLM/检索节点异常时输出此安全话术
+        selected: false
+        answer: '抱歉，我暂时遇到了一点技术问题，没能处理好你的消息。
+
+
+          可以换个方式再说一次吗？
+
+
+          如果情况紧急，请拨打全国统一心理援助热线 12356；如有迫切危险，请立即拨打 120 或 110。'
+        variables: []
+    - data:
+        answer: '我不会主动要求你提供学号、姓名、身份证号、手机号等个人身份信息。
+
+
+          如果你在对话中不小心发送了这些信息，建议你删除包含这些信息的消息。
+
+
+          关于对话内容的保存和处理，具体规则以学校心理中心平台的管理政策为准。如有疑问，建议直接联系心理中心（020-85280085）了解详情。'
+        desc: PII隐私相关提问的固定话术（不经过LLM，避免API审核拦截）
+        selected: false
+        title: PII隐私回复
+        type: answer
+        variables: []
+      height: 257
+      id: answer_pii
+      position:
+        x: 730
+        y: 200
+      positionAbsolute:
+        x: 730
+        y: 200
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    - data:
+        answer: '当前版本暂不支持图片上传和识别功能。
+
+
+          如果你有想表达的内容，可以用文字描述，我会认真倾听。
+
+
+          如果你需要分享视觉内容（如心情日记、绘画表达等），可以尝试用文字描述画面中的感受和想法。'
+        desc: 图片相关提问的固定话术（不经过LLM，避免依赖提示词规则）
+        selected: false
+        title: 图片不支持回复
+        type: answer
+        variables: []
+      height: 257
+      id: answer_image
+      position:
+        x: 730
+        y: 300
+      positionAbsolute:
+        x: 730
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 303
+    viewport:
+      x: -218.60000000000002
+      y: 160.99999999999997
+      zoom: 0.4

@@ -1,0 +1,92 @@
+﻿**********************
+Windows PowerShell 脚本开始
+开始时间: 20261003021540
+用户名: DESKTOP-A2A4PND\24396
+RunAs 用户: DESKTOP-A2A4PND\24396
+配置名称: 
+计算机: DESKTOP-A2A4PND (Microsoft Windows NT 10.0.26200.0)
+主机应用程序: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand RwBlAHQALQBQAHIAbwBjAGUAcwBzACAALQBJAGQAIAA5ADEAMwAyACAALQBFAHIAcgBvAHIAQQBjAHQAaQBvAG4AIABTAGkAbABlAG4AdABsAHkAQwBvAG4AdABpAG4AdQBlACAAfAAgAFMAdABvAHAALQBQAHIAbwBjAGUAcwBzACAALQBGAG8AcgBjAGUAIAAtAEUAcgByAG8AcgBBAGMAdABpAG8AbgAgAFMAaQBsAGUAbgB0AGwAeQBDAG8AbgB0AGkAbgB1AGUAOwAgAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAHcAcwBsACAALQBFAHIAcgBvAHIAQQBjAHQAaQBvAG4AIABTAGkAbABlAG4AdABsAHkAQwBvAG4AdABpAG4AdQBlACAAfAAgAFMAdABvAHAALQBQAHIAbwBjAGUAcwBzACAALQBGAG8AcgBjAGUAIAAtAEUAcgByAG8AcgBBAGMAdABpAG8AbgAgAFMAaQBsAGUAbgB0AGwAeQBDAG8AbgB0AGkAbgB1AGUAOwAgAFMAdABhAHIAdAAtAFMAbABlAGUAcAAgAC0AUwBlAGMAbwBuAGQAcwAgADMAOwAgACYAIAAnAGMAOgBcAFUAcwBlAHIAcwBcADIANAAzADkANgBcAEQAZQBzAGsAdABvAHAAXABhAGkAlF4odRtSsGUAX9FTXABkAG8AYwBrAGUAcgBcAGkAbgBzAHQAYQBsAGwALQBkAG8AYwBrAGUAcgAuAHAAcwAxACcA
+进程 ID: 10308
+PSVersion: 5.1.26100.9444
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9444
+BuildVersion: 10.0.26100.9444
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+
+===== 0/6 环境检查 =====
+  [OK] 当前用户: 24396（管理员）
+  [*]  系统: Microsoft Windows 11 家庭版 中文版
+
+===== 1/6 启用并安装 WSL2（家庭版唯一可行的容器后端） =====
+  [OK] Microsoft-Windows-Subsystem-Linux 已启用
+  [OK] VirtualMachinePlatform 已启用
+  [*]  检测到本地离线 WSL 安装包，优先离线安装 ...
+  [*]    （约 680MB，安装过程无输出属正常，请耐心等 1-3 分钟）
+  [OK] WSL 离线包安装完成
+  [OK] WSL 已就绪
+
+===== 2/6 安装 Docker Desktop =====
+  [OK] Docker Desktop 已安装，跳过
+  [OK] 已将当前用户加入 docker-users 组
+
+===== 3/6 无需重启 =====
+
+===== 4/6 启动 Docker Desktop =====
+  [*]  等待 Docker 引擎就绪（最多 5 分钟，期间无输出属正常）...
+  [OK] Docker 引擎已就绪
+
+===== 5/6 准备 Dify 源码 =====
+  [*]  正在解压 Dify 源码包 ...
+  [OK] Dify 源码已就绪
+
+===== 6/6 部署 Dify =====
+  [OK] 已从 .env.example 生成 .env
+  [*]  正在拉取镜像并启动容器（首次约 10-20 分钟，取决于网速）...
+[+] up 12/12
+ ! Image ubuntu/squid:latest                             Interrupted                                               21.7s
+ ! Image cr.weaviate.io/semitechnologies/weaviate:1.39.2 Interrupted                                               21.7s
+ ! Image langgenius/dify-sandbox:0.2.15                  Interrupted                                               21.7s
+ ! Image langgenius/dify-plugin-daemon:0.6.10-local      Interrupted                                               21.7s
+ ! Image langgenius/dify-api:1.17.1                      Interrupted                                               21.7s
+ ! Image langgenius/dify-agent-backend:1.17.1            Interrupted                                               21.7s
+ ✘ Image redis:6-alpine                                  Error failed to resolve reference "docker.io/lib...       21.7s
+ ! Image langgenius/dify-agent-local-sandbox:1.17.1      Interrupted                                               21.7s
+ ! Image langgenius/dify-web:1.17.1                      Interrupted                                               21.7s
+ ! Image postgres:15-alpine                              Interrupted                                               21.7s
+ ! Image nginx:latest                                    Interrupted                                               21.7s
+ ! Image busybox:latest                                  Interrupted                                               21.7s
+Error response from daemon: failed to resolve reference "docker.io/library/redis:6-alpine": failed to do request: Head "
+https://registry-1.docker.io/v2/library/redis/manifests/6-alpine": dialing registry-1.docker.io:443 container via direct
+ connection because Docker Desktop has no HTTPS proxy: connecting to registry-1.docker.io:443: dial tcp 31.13.96.194:443
+: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or
+ established connection failed because connected host has failed to respond.
+Error response from daemon: No such image: ubuntu/squid:latest
+Error response from daemon: No such image: cr.weaviate.io/semitechnologies/weaviate:1.39.2
+Error response from daemon: No such image: langgenius/dify-agent-local-sandbox:1.17.1
+Error response from daemon: No such image: langgenius/dify-agent-backend:1.17.1
+Error response from daemon: No such image: langgenius/dify-api:1.17.1
+Error response from daemon: No such image: postgres:15-alpine
+Error response from daemon: No such image: langgenius/dify-web:1.17.1
+Error response from daemon: No such image: busybox:latest
+Error response from daemon: No such image: langgenius/dify-plugin-daemon:0.6.10-local
+Error response from daemon: No such image: nginx:latest
+Error response from daemon: No such image: langgenius/dify-sandbox:0.2.15
+  [!]  docker compose 退出码 = 1
+
+===== 全部完成 =====
+  [OK] Dify 已启动，浏览器访问: http://localhost
+
+  首次进入请设置管理员账号。
+  接入本地 Ollama 模型：
+    Dify 控制台 → 设置 → 模型供应商 → Ollama
+    Base URL 填: http://host.docker.internal:11434
+    Model name 填: qwen2.5:7b
+
+**********************
+Windows PowerShell 脚本结束
+结束时间: 20261003022237
+**********************

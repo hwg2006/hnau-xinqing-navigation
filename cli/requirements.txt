@@ -1,0 +1,10 @@
+# CLI 依赖
+requests>=2.31.0
+python-dotenv>=1.0.0
+prompt-toolkit>=3.0.43
+rich>=13.7.0
+
+# Ollama 直连后端依赖 (备选方案)
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.9.0

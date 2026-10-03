@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#22c55e">
+<meta name="description" content="华农心晴导航 - 校园心理支持 AI 助手">
+<title>华农心晴导航</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="./config.js"></script>
+<style>
+  body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+  .typing::after { content: '▊'; animation: blink 0.8s infinite; }
+  @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+  .msg-bubble { white-space: pre-wrap; word-break: break-word; }
+  /* 自定义滚动条 */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-thumb { background: #c5d5c5; border-radius: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body class="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 min-h-screen">
+
+<div id="app" class="max-w-2xl mx-auto h-screen flex flex-col p-4">
+
+  <!-- 头部 -->
+  <header class="flex items-center justify-between py-3 px-4 bg-white/80 backdrop-blur rounded-2xl shadow-sm mb-3 border border-green-100">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white text-xl">🧠</div>
+      <div>
+        <h1 class="text-lg font-bold text-gray-800">华农心晴导航</h1>
+        <p class="text-xs text-gray-500">校园心理支持 AI 助手</p>
+      </div>
+    </div>
+    <button @click="newChat" class="px-3 py-1.5 text-sm bg-green-50 text-green-700 hover:bg-green-100 rounded-lg border border-green-200 transition">
+      + 新会话
+    </button>
+  </header>
+
+  <!-- 提示消息 -->
+  <div v-if="showSettingsTip" class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-800">
+    ⚠️ 未连接到后端服务，请确认代理已启动：在 <code class="bg-yellow-100 px-1 rounded">server/</code> 目录运行 <code class="bg-yellow-100 px-1 rounded">uvicorn dify_proxy:app --port 8001</code>。
+  </div>
+
+  <!-- 消息区 -->
+  <main ref="messagesEnd" class="flex-1 overflow-y-auto space-y-4 py-2 px-1">
+    <!-- 欢迎语 -->
+    <div v-if="messages.length === 0" class="text-center py-10">
+      <div class="inline-block bg-white rounded-2xl px-6 py-5 shadow-sm border border-green-100">
+        <div class="text-4xl mb-3">🌿</div>
+        <p class="text-gray-700 font-medium mb-1">你好，我是华农心晴导航</p>
+        <p class="text-sm text-gray-500">一个校园心理支持 AI 助手，不是真人心理老师</p>
+        <div class="mt-4 space-y-2 text-sm text-left">
+          <p class="text-gray-600">💬 聊聊最近的压力、心情、学业困扰</p>
+          <p class="text-gray-600">📝 做 GAD-7 焦虑自测 / 性格小游戏</p>
+          <p class="text-gray-600">📞 查询校园心理服务和老师信息</p>
+        </div>
+        <p class="mt-4 text-xs text-gray-400">紧急情况请拨打 12356 或 120</p>
+      </div>
+    </div>
+
+    <!-- 消息列表 -->
+    <div v-for="(msg, idx) in messages" :key="idx" :class="['flex gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start']">
+      <!-- AI 头像 -->
+      <div v-if="msg.role === 'assistant'" class="w-8 h-8 flex-shrink-0 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white text-sm">🧠</div>
+      <!-- 气泡 -->
+      <div :class="[
+        'max-w-[80%] rounded-2xl px-4 py-2.5 msg-bubble text-[15px] leading-relaxed shadow-sm',
+        msg.role === 'user'
+          ? 'bg-green-500 text-white rounded-br-md'
+          : 'bg-white text-gray-800 border border-green-100 rounded-bl-md'
+      ]" :class="{ 'typing': msg.role === 'assistant' && idx === messages.length - 1 && streaming }">
+        {{ msg.content }}
+      </div>
+      <!-- 用户头像 -->
+      <div v-if="msg.role === 'user'" class="w-8 h-8 flex-shrink-0 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-sm">👤</div>
+    </div>
+  </main>
+
+  <!-- 输入区 -->
+  <footer class="py-3 px-2">
+    <div class="flex gap-2 items-end">
+      <textarea
+        v-model="input"
+        @keydown.enter.exact.prevent="sendMessage"
+        :disabled="streaming"
+        placeholder="和心晴导航聊聊吧... (Enter 发送, Shift+Enter 换行)"
+        rows="1"
+        class="flex-1 resize-none rounded-2xl px-4 py-3 bg-white border border-green-200 focus:border-green-400 focus:ring-2 focus:ring-green-200 outline-none text-[15px] shadow-sm max-h-32"
+      ></textarea>
+      <button
+        @click="sendMessage"
+        :disabled="!input.trim() || streaming"
+        class="px-5 py-3 rounded-2xl font-medium text-white transition-all transition
+          disabled:bg-gray-300 disabled:cursor-not-allowed
+          bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-sm"
+      >
+        <span v-if="streaming">...</span>
+        <span v-else>发送</span>
+      </button>
+    </div>
+    <p class="text-center text-xs text-gray-400 mt-2">
+      AI 生成内容仅供参考，不能替代专业心理咨询
+    </p>
+  </footer>
+</div>
+
+<script>
+const { createApp, ref, nextTick, computed } = Vue;
+
+createApp({
+  setup() {
+    const messages = ref([]);
+    const input = ref('');
+    const streaming = ref(false);
+    const conversationId = ref('');
+    const messagesEnd = ref(null);
+
+    // 从 config.js / 桌面端注入读取
+    const config = window.APP_CONFIG || {};
+    // 代理模式: apiBaseUrl（Key 在服务端，前端不持有）；直连模式: difyBaseUrl + difyApiKey
+    const USE_PROXY = !!config.apiBaseUrl;
+    const API_BASE = (config.apiBaseUrl || config.difyBaseUrl || 'http://localhost').replace(/\/$/, '');
+    const API_KEY = config.difyApiKey || '';
+
+    const showSettingsTip = computed(() =>
+      USE_PROXY ? false : (!API_KEY || API_KEY.startsWith('app-xxxx'))
+    );
+
+    // 自动滚动到底部
+    function scrollToBottom() {
+      nextTick(() => {
+        if (messagesEnd.value) {
+          messagesEnd.value.scrollTop = messagesEnd.value.scrollHeight;
+        }
+      });
+    }
+
+    // 发送消息到 Dify API
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text || streaming.value) return;
+      if (showSettingsTip.value) {
+        alert('请先在 web/config.js 中配置 DIFY API Key！');
+        return;
+      }
+
+      // 加入用户消息
+      messages.value.push({ role: 'user', content: text });
+      input.value = '';
+      streaming.value = true;
+
+      // 添加 AI 占位消息
+      const aiMsg = { role: 'assistant', content: '' };
+      messages.value.push(aiMsg);
+      scrollToBottom();
+
+      try {
+        await streamChat(text, aiMsg);
+      } catch (err) {
+        aiMsg.content = '抱歉，出现了错误: ' + err.message;
+      } finally {
+        streaming.value = false;
+        scrollToBottom();
+      }
+    }
+
+    async function streamChat(query, aiMsg) {
+      const headers = { 'Content-Type': 'application/json' };
+      // 代理模式不发送 Key（由服务端注入）；直连模式才带 Key
+      if (API_KEY) headers['Authorization'] = `Bearer ${API_KEY}`;
+
+      const resp = await fetch(`${API_BASE}/v1/chat-messages`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          inputs: {},
+          query: query,
+          response_mode: 'streaming',
+          conversation_id: conversationId.value || '',
+          user: 'web_user_001',
+        }),
+      });
+
+      if (!resp.ok) {
+        throw new Error(`HTTP ${resp.status}: ${await resp.text()}`);
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // 解析 SSE 事件
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) continue;
+          const data = trimmed.slice(5).trim();
+          if (data === '[DONE]') continue;
+
+          try {
+            const json = JSON.parse(data);
+            if (json.event === 'message' && json.answer) {
+              aiMsg.content += json.answer;
+              scrollToBottom();
+            }
+            if (json.conversation_id && !conversationId.value) {
+              conversationId.value = json.conversation_id;
+            }
+          } catch (_) { /* 忽略解析错误 */ }
+        }
+      }
+    }
+
+    function newChat() {
+      messages.value = [];
+      conversationId.value = '';
+      streaming.value = false;
+    }
+
+    return {
+      messages, input, streaming, conversationId, messagesEnd,
+      showSettingsTip, sendMessage, newChat,
+    };
+  },
+}).mount('#app');
+
+// 注册 Service Worker (PWA 离线缓存)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
