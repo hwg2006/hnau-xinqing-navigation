@@ -15,15 +15,27 @@ function createProxyServer({ loadConfig }) {
   let server = null;
   let port = 0;
 
+  // 仅放行本机渲染层来源：file:// 的 Origin 为字符串 "null"，或 localhost/127.0.0.1 任意端口
+  const ALLOWED_PATH = '/v1/chat-messages';
+  function isAllowedOrigin(origin) {
+    if (!origin) return false;
+    return origin === 'null' || origin === 'file://'
+      || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+  }
+
   function handleRequest(req, res) {
-    // 渲染层从 file:// 加载，Origin 为 null，需放开 CORS
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    const origin = req.headers.origin;
+    if (isAllowedOrigin(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+    }
+    res.setHeader('Access-Control-Allow-Headers', 'content-type');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
 
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
-    if (!req.url.startsWith('/v1/')) {
+    // 仅放行对话接口，避免代理被当作通用转发通道
+    if (req.url.split('?')[0] !== ALLOWED_PATH) {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'not found' }));
       return;

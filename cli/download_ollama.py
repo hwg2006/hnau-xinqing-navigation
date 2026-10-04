@@ -28,13 +28,15 @@ def download():
                 url = u
                 print(f"✓ 找到可用版本 {v}")
                 break
-        except:
+        except requests.RequestException:
             continue
     
     if not url:
-        # 试试 Ollama 官方下载
-        url = "https://ollama.com/download/OllamaSetup.exe"
-        print(f"使用官方安装包作为备选")
+        # 所有 ZIP 版本探测失败：不做错误兜底（.exe 无法用 zipfile 解压），直接引导手动安装
+        print("[!] 未找到可用的 Ollama ZIP 版本（可能是网络受限）")
+        print("    请手动下载安装: https://ollama.com/download/windows")
+        print(f"    或手动解压到: {EXTRACT_DIR}")
+        return False
     
     print(f"下载地址: {url}")
     
@@ -78,11 +80,6 @@ def download():
     # 解压
     print(f"解压到 {EXTRACT_DIR} ...")
     os.makedirs(EXTRACT_DIR, exist_ok=True)
-    
-    if ZIP_PATH.endswith(".exe"):
-        print("检测到是安装包 (.exe)，请手动双击安装")
-        print(f"位置: {ZIP_PATH}")
-        return True
     
     try:
         with zipfile.ZipFile(ZIP_PATH) as zf:

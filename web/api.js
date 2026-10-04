@@ -10,7 +10,21 @@
   // 地址来源优先级：桌面端注入(HN_DESKTOP) > web/config.js > 默认本地代理
   const config = window.APP_CONFIG || {};
   const API_BASE = (config.apiBaseUrl || 'http://localhost:8001').replace(/\/$/, '');
-  const USER_ID = 'web_user_001';
+
+  // 匿名用户标识：首次访问生成并持久化，避免写死固定 ID 造成多用户串扰
+  const USER_ID = (function () {
+    const KEY = 'xinqing_user_id';
+    try {
+      let id = localStorage.getItem(KEY);
+      if (!id) {
+        id = 'web-' + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem(KEY, id);
+      }
+      return id;
+    } catch (e) {
+      return 'web-anonymous'; // localStorage 不可用时退化为匿名
+    }
+  })();
 
   /**
    * 流式对话订阅。

@@ -6,7 +6,7 @@
 // 安全：contextIsolation + preload 桥接，渲染层不持有 API Key。
 // ============================================================
 
-const { app, ipcMain, globalShortcut, BrowserWindow } = require('electron');
+const { app, ipcMain, globalShortcut, dialog, BrowserWindow } = require('electron');
 
 const { loadConfig, saveConfig } = require('./src/config-store');
 const { createProxyServer } = require('./src/proxy-server');
@@ -20,6 +20,9 @@ const windowManager = createWindowManager({ getProxyPort: () => proxy.getPort() 
 
 let tray = null;
 
+// 关窗到重建窗口的间隔（毫秒），留出旧窗口释放时间
+const RESTART_DELAY_MS = 300;
+
 // 打开设置窗口（父窗口取当前任一主窗口）
 function openSettings() {
   const parent = windowManager.getWindows().values().next().value || null;
@@ -29,7 +32,7 @@ function openSettings() {
 // 重启：关闭全部窗口后重建
 function restartApp() {
   windowManager.closeAll();
-  setTimeout(() => windowManager.createWindow(), 300);
+  setTimeout(() => windowManager.createWindow(), RESTART_DELAY_MS);
 }
 
 // ---------- IPC：设置窗口读写配置 ----------
@@ -47,7 +50,10 @@ app.whenReady().then(async () => {
     const port = await proxy.start();
     console.log(`[desktop] 内嵌代理已启动: http://127.0.0.1:${port}`);
   } catch (e) {
-    console.error('启动内嵌代理失败:', e);
+    // 代理起不来则页面无法访问后端，明确报错并退出，避免"看似启动成功"的假象
+    dialog.showErrorBox('启动失败', `内嵌代理启动失败，应用无法连接后端服务。\n\n${e.message}`);
+    app.quit();
+    return;
   }
 
   windowManager.createWindow();

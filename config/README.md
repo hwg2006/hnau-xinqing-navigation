@@ -5,7 +5,7 @@
 ## 使用
 
 ```powershell
-cp config\.env.example config\.env   # 然后填入自己的值
+Copy-Item config\.env.example config\.env   # 然后填入自己的值
 ```
 
 ## 配置项

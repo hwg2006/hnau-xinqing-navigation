@@ -92,7 +92,11 @@ async def chat_messages(request: Request):
         r = requests.post(TARGET, json=body, headers=UPSTREAM_HEADERS, timeout=300)
     except requests.RequestException as e:
         return JSONResponse({"error": str(e)}, status_code=502)
-    return JSONResponse(r.json(), status_code=r.status_code)
+    # 上游可能返回非 JSON（如网关错误页），避免解析异常直接 500
+    try:
+        return JSONResponse(r.json(), status_code=r.status_code)
+    except ValueError:
+        return JSONResponse({"error": f"上游返回非 JSON 响应（{r.status_code}）"}, status_code=502)
 
 
 if __name__ == "__main__":

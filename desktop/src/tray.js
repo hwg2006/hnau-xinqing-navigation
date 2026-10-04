@@ -25,7 +25,8 @@ function createTray({ actions }) {
   tray.setToolTip('华农心晴导航');
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: '打开主窗口', click: () => actions.openMain() },
-    { label: '新会话 (Ctrl+N)', accelerator: 'CommandOrControl+N', click: () => actions.newWindow() },
+    // 快捷键统一由 main.js 的 globalShortcut 注册，此处仅作提示，避免重复绑定
+    { label: '新会话 (Ctrl+N)', click: () => actions.newWindow() },
     { type: 'separator' },
     { label: '设置 API 配置', click: () => actions.openSettings() },
     { label: '重启', click: () => actions.restart() },

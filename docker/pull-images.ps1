@@ -1,3 +1,8 @@
+# ============================================================
+# 拉取 Dify 自部署所需镜像（第一轮：每镜像最多重试 8 次）
+# 用途：网络不稳时批量重试，失败不中断其余镜像
+# 用法：powershell -ExecutionPolicy Bypass -File docker\pull-images.ps1
+# ============================================================
 $ErrorActionPreference = 'Continue'
 $imgs = @(
   'pgvector/pgvector:pg16',

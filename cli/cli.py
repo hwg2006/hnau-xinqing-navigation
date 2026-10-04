@@ -6,7 +6,6 @@
 使用方法:
     python cli.py              # 启动交互式对话
     python cli.py "你好"       # 单轮对话
-    python cli.py --stream     # 流式输出（默认）
     python cli.py --no-stream  # 非流式等待完整回复
     python cli.py --new        # 开始新会话
 """
@@ -14,6 +13,7 @@
 import os
 import sys
 import json
+import uuid
 import argparse
 import requests
 from dotenv import load_dotenv
@@ -45,6 +45,9 @@ if not DIFY_API_KEY or DIFY_API_KEY.startswith("app-xxxx"):
     print("    获取方式: Dify 应用控制台 → 访问 API → 创建 API Key")
     sys.exit(1)
 
+# 匿名用户标识：可用环境变量 CLI_USER_ID 覆盖，否则每次运行生成随机匿名 ID
+USER_ID = os.getenv("CLI_USER_ID") or f"cli-{uuid.uuid4().hex[:8]}"
+
 console = Console()
 
 
@@ -67,7 +70,7 @@ class DifyClient:
             "query": query,
             "response_mode": "streaming" if stream else "blocking",
             "conversation_id": self.conversation_id or "",
-            "user": "cli_user_001",
+            "user": USER_ID,
         }
 
         if stream:

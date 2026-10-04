@@ -134,7 +134,8 @@ ai应用创新开发/
 │   ├── cli.py               # 主程序：交互式 / 单轮对话
 │   ├── convert_to_ollama.py # 工作流 YAML 转本地 Ollama Provider
 │   ├── download_ollama.py   # Ollama 便携版下载器
-│   └── test_ollama.py       # Ollama 连通性自检
+│   ├── test_ollama.py       # Ollama 连通性自检
+│   └── requirements.txt     # CLI 依赖
 ├── web/                     # Web 前端（Vue3 单页 + PWA，仅做 UI 与订阅）
 │   ├── index.html           # UI 骨架（无内联脚本）
 │   ├── app.js               # Vue 组件逻辑
@@ -150,7 +151,8 @@ ai应用创新开发/
 │   └── assets/icon.png
 ├── server/                  # 后端服务（只做计算与 SSE 推送）
 │   ├── dify_proxy.py        # 主路线：代理 Dify，注入 Key + 透传 SSE（端口 8001）
-│   └── ollama_backend.py    # 备用后端：直连 Ollama（端口 8000）
+│   ├── ollama_backend.py    # 备用后端：直连 Ollama（端口 8000）
+│   └── requirements.txt     # 后端依赖
 ├── config/                  # 集中配置
 │   ├── .env                 # 真实配置（已被 .gitignore 排除）
 │   └── .env.example         # 配置模板
@@ -161,7 +163,12 @@ ai应用创新开发/
 ├── 心理助手_集成版_V3_fixed.yml  # Dify 工作流源文件（可导入）
 ├── 心理助手_ollama版.yml         # 转换为本地 Ollama Provider 的版本
 ├── setup.ps1                # 一键环境安装脚本
-└── start.bat                # 一键启动面板
+├── start.bat                # 一键启动面板
+├── README.md                # 项目总览与快速开始（本文件）
+├── 工程日志.md               # 开发过程与阶段记录
+├── 华农心晴导航.pptx         # 项目展示演示文稿
+├── xin-qing-summary.html    # 项目简介页面
+└── .gitignore               # 忽略密钥与构建产物
 ```
 
 > 每个功能文件夹（`cli/ web/ desktop/ server/ config/ docker/`）下都有独立的简短 `README.md`，说明该模块的职责与启动方式。
@@ -174,7 +181,7 @@ ai应用创新开发/
 
 ```powershell
 # 0) 复制配置模板并填入自己的 Dify API Key
-cp config\.env.example config\.env
+Copy-Item config\.env.example config\.env
 
 # 1) 启动本地模型
 ollama serve

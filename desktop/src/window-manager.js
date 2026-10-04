@@ -23,11 +23,10 @@ function createWindowManager({ getProxyPort }) {
         preload: path.join(__dirname, '..', 'preload.js'),
         contextIsolation: true,   // 安全: 隔离 node 环境
         nodeIntegration: false,    // 安全: 渲染层不允许 require
-        sandbox: false,            // preload 需要 require fs/path
+        sandbox: true,             // 安全: 沙箱内 preload 仅用 electron 桥接，无需 Node 能力
         webviewTag: false,         // 安全: 禁用 webview
         // 把代理地址传给 preload，preload 再经 contextBridge 暴露给页面
         additionalArguments: [
-          `--user-data=${require('electron').app.getPath('userData')}`,
           `--proxy-url=http://127.0.0.1:${getProxyPort()}`,
         ],
       },

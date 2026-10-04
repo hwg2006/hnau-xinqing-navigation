@@ -48,6 +48,12 @@ createApp({
           onConversationId(cid) {
             if (!conversationId.value) conversationId.value = cid;
           },
+          // 订阅后端推送的 error 事件，避免错误被静默吞掉
+          onError(msg) {
+            backendError.value = true;
+            aiMsg.content += (aiMsg.content ? '\n' : '') + '抱歉，出现了错误: ' + msg;
+            scrollToBottom();
+          },
         });
         backendError.value = false;
       } catch (err) {
