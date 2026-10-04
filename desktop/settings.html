@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  华农心晴导航 - 桌面端设置页（API 配置）
+  职责：仅做 UI 组织与读写订阅，通过 window.hnauAPI 这一 IPC 桥
+       与主进程通信；配置值由 JS 动态填充，不做字符串拼 HTML。
+  ============================================================ -->
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'">
+  <title>设置</title>
+  <style>
+    body { font-family: -apple-system, 'Microsoft YaHei', sans-serif; padding: 24px; background: #f0fdf4; }
+    h2 { color: #166534; margin-top: 0; }
+    label { display: block; margin: 16px 0 6px; font-weight: 600; color: #374151; }
+    input { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+    input:focus { border-color: #22c55e; outline: none; box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+    .hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
+    button { margin-top: 24px; padding: 10px 24px; background: linear-gradient(135deg, #22c55e, #10b981); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; }
+    button:hover { opacity: 0.9; }
+    .save-hint { color: #22c55e; font-size: 13px; margin-top: 12px; display: none; }
+  </style>
+</head>
+<body>
+  <h2>⚙️ 华农心晴导航 - API 配置</h2>
+  <label>Dify 服务地址</label>
+  <input id="url" placeholder="http://localhost">
+  <div class="hint">本地 Dify Docker 部署默认为 http://localhost</div>
+  <label>Dify App API Key</label>
+  <input id="key" type="password" placeholder="app-xxxxxxxxxxxx">
+  <div class="hint">Dify 控制台 → 应用 → API 访问 → 创建 API Key</div>
+  <button id="save-btn">保存并应用</button>
+  <div id="hint" class="save-hint">✓ 保存成功！刷新窗口即可生效</div>
+
+  <script src="./settings.js"></script>
+</body>
+</html>

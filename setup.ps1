@@ -140,7 +140,7 @@ if (Test-Path "$difyDir\docker\docker-compose.yaml") {
     }
 } else {
     Write-Host "⚠ Docker 未就绪，跳过 Dify 部署" -ForegroundColor Yellow
-    Write-Host "  可用 Ollama 直连后端作为替代: cd cli && uvicorn ollama_backend:app --port 8000" -ForegroundColor White
+    Write-Host "  可用备用后端（Ollama 直连）替代: cd server && uvicorn ollama_backend:app --port 8000" -ForegroundColor White
 }
 
 # ============================================================
@@ -176,14 +176,15 @@ Write-Host ""
 Write-Host "启动方式:" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  CLI 对话:       cd cli && python cli.py" -ForegroundColor White
+Write-Host "  Web 后端代理:   cd server && uvicorn dify_proxy:app --port 8001" -ForegroundColor White
 Write-Host "  Web 前端:       cd web && python -m http.server 8080" -ForegroundColor White
 Write-Host "  Electron 桌面:  cd desktop && npm.cmd start" -ForegroundColor White
-Write-Host "  Ollama 直连:    cd cli && uvicorn ollama_backend:app --port 8000 --reload" -ForegroundColor White
+Write-Host "  备用后端:       cd server && uvicorn ollama_backend:app --port 8000" -ForegroundColor White
 Write-Host "  一键面板:       双击 start.bat" -ForegroundColor White
 Write-Host ""
 Write-Host "首次使用注意:" -ForegroundColor Yellow
-Write-Host "  1. 编辑 web\config.js 填入 Dify API Key" -ForegroundColor White
-Write-Host "  2. 编辑 config\.env (从 .env.example 复制) 填入 Dify API Key" -ForegroundColor White
+Write-Host "  1. 复制 config\.env.example 为 config\.env，填入 Dify API Key（Key 只存服务端）" -ForegroundColor White
+Write-Host "  2. Web 端 Key 由 server/dify_proxy.py 代理注入，前端无需也不能填 Key" -ForegroundColor White
 Write-Host "  3. Electron 桌面内: 系统托盘 → 设置 API 配置" -ForegroundColor White
 Write-Host ""
 pause

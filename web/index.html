@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+<!-- ============================================================
+     华农心晴导航 Web 前端 - 页面结构（只负责 UI 组织与订阅）
+     逻辑分层: api.js（后端通信 / SSE 订阅） + app.js（Vue UI 状态）
+     安全: 本页不含任何 API Key，Key 由 server/dify_proxy.py 在服务端注入
+     ============================================================ -->
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -40,9 +45,9 @@
     </button>
   </header>
 
-  <!-- 提示消息 -->
-  <div v-if="showSettingsTip" class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-800">
-    ⚠️ 未连接到后端服务，请确认代理已启动：在 <code class="bg-yellow-100 px-1 rounded">server/</code> 目录运行 <code class="bg-yellow-100 px-1 rounded">uvicorn dify_proxy:app --port 8001</code>。
+  <!-- 后端未连通提示 -->
+  <div v-if="backendError" class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-800">
+    ⚠️ 未连接到后端服务，请确认代理已启动：在 <code class="bg-yellow-100 px-1 rounded">server/</code> 目录运行 <code class="bg-yellow-100 px-1 rounded">uvicorn dify_proxy:app --host 127.0.0.1 --port 8001</code>。
   </div>
 
   <!-- 消息区 -->
@@ -108,139 +113,8 @@
   </footer>
 </div>
 
-<script>
-const { createApp, ref, nextTick, computed } = Vue;
-
-createApp({
-  setup() {
-    const messages = ref([]);
-    const input = ref('');
-    const streaming = ref(false);
-    const conversationId = ref('');
-    const messagesEnd = ref(null);
-
-    // 从 config.js / 桌面端注入读取
-    const config = window.APP_CONFIG || {};
-    // 代理模式: apiBaseUrl（Key 在服务端，前端不持有）；直连模式: difyBaseUrl + difyApiKey
-    const USE_PROXY = !!config.apiBaseUrl;
-    const API_BASE = (config.apiBaseUrl || config.difyBaseUrl || 'http://localhost').replace(/\/$/, '');
-    const API_KEY = config.difyApiKey || '';
-
-    const showSettingsTip = computed(() =>
-      USE_PROXY ? false : (!API_KEY || API_KEY.startsWith('app-xxxx'))
-    );
-
-    // 自动滚动到底部
-    function scrollToBottom() {
-      nextTick(() => {
-        if (messagesEnd.value) {
-          messagesEnd.value.scrollTop = messagesEnd.value.scrollHeight;
-        }
-      });
-    }
-
-    // 发送消息到 Dify API
-    async function sendMessage() {
-      const text = input.value.trim();
-      if (!text || streaming.value) return;
-      if (showSettingsTip.value) {
-        alert('请先在 web/config.js 中配置 DIFY API Key！');
-        return;
-      }
-
-      // 加入用户消息
-      messages.value.push({ role: 'user', content: text });
-      input.value = '';
-      streaming.value = true;
-
-      // 添加 AI 占位消息
-      const aiMsg = { role: 'assistant', content: '' };
-      messages.value.push(aiMsg);
-      scrollToBottom();
-
-      try {
-        await streamChat(text, aiMsg);
-      } catch (err) {
-        aiMsg.content = '抱歉，出现了错误: ' + err.message;
-      } finally {
-        streaming.value = false;
-        scrollToBottom();
-      }
-    }
-
-    async function streamChat(query, aiMsg) {
-      const headers = { 'Content-Type': 'application/json' };
-      // 代理模式不发送 Key（由服务端注入）；直连模式才带 Key
-      if (API_KEY) headers['Authorization'] = `Bearer ${API_KEY}`;
-
-      const resp = await fetch(`${API_BASE}/v1/chat-messages`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          inputs: {},
-          query: query,
-          response_mode: 'streaming',
-          conversation_id: conversationId.value || '',
-          user: 'web_user_001',
-        }),
-      });
-
-      if (!resp.ok) {
-        throw new Error(`HTTP ${resp.status}: ${await resp.text()}`);
-      }
-
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-
-        // 解析 SSE 事件
-        const lines = buffer.split('\n');
-        buffer = lines.pop();
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed.startsWith('data:')) continue;
-          const data = trimmed.slice(5).trim();
-          if (data === '[DONE]') continue;
-
-          try {
-            const json = JSON.parse(data);
-            if (json.event === 'message' && json.answer) {
-              aiMsg.content += json.answer;
-              scrollToBottom();
-            }
-            if (json.conversation_id && !conversationId.value) {
-              conversationId.value = json.conversation_id;
-            }
-          } catch (_) { /* 忽略解析错误 */ }
-        }
-      }
-    }
-
-    function newChat() {
-      messages.value = [];
-      conversationId.value = '';
-      streaming.value = false;
-    }
-
-    return {
-      messages, input, streaming, conversationId, messagesEnd,
-      showSettingsTip, sendMessage, newChat,
-    };
-  },
-}).mount('#app');
-
-// 注册 Service Worker (PWA 离线缓存)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
-  });
-}
-</script>
+<!-- 逻辑分层：api.js 负责通信与订阅，app.js 负责 UI 状态 -->
+<script src="./api.js"></script>
+<script src="./app.js"></script>
 </body>
 </html>

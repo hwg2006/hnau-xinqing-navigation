@@ -25,6 +25,9 @@
     "files": [
       "main.js",
       "preload.js",
+      "settings.html",
+      "settings.js",
+      "src/**/*",
       "assets/**/*"
     ],
     "extraResources": [

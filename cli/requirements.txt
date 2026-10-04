@@ -1,10 +1,9 @@
-# CLI 依赖
+# 华农心晴导航 - CLI 依赖（cli/）
+# 安装: pip install -r cli/requirements.txt
+#
+# 注意：后端依赖（fastapi / uvicorn / pydantic）不在这里，
+#       见 server/requirements.txt
 requests>=2.31.0
 python-dotenv>=1.0.0
 prompt-toolkit>=3.0.43
 rich>=13.7.0
-
-# Ollama 直连后端依赖 (备选方案)
-fastapi>=0.115.0
-uvicorn[standard]>=0.30.0
-pydantic>=2.9.0

@@ -1,12 +1,15 @@
 // ============================================================
 // 华农心晴导航 - Service Worker (PWA)
-// 提供基础离线缓存，让 Web 版可"添加到桌面"当独立应用
+// 职责：提供基础离线缓存，让 Web 版可"添加到桌面"当独立应用
+// 说明：修改前端文件后需同步升 CACHE_NAME，否则用户会读到旧缓存
 // ============================================================
-const CACHE_NAME = 'xinqiang-nav-v2';
+const CACHE_NAME = 'xinqiang-nav-v3';
 const PRECACHE_URLS = [
   './',
   './index.html',
   './config.js',
+  './api.js',
+  './app.js',
   './manifest.json',
 ];
 
@@ -36,7 +39,7 @@ self.addEventListener('fetch', (event) => {
   // 跳过 API 请求（不缓存动态数据）
   if (event.request.url.includes('/v1/') || event.request.url.includes('localhost:11434')) return;
 
-  // config.js 网络优先：改了 API 地址/密钥后刷新即生效，避免读到旧缓存
+  // config.js 网络优先：改了 API 地址后刷新即生效，避免读到旧缓存
   if (event.request.url.includes('config.js')) {
     event.respondWith(
       fetch(event.request)

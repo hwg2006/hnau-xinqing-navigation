@@ -9,7 +9,7 @@
 启动（在 server/ 目录下）:
     uvicorn dify_proxy:app --host 127.0.0.1 --port 8001
 
-依赖: fastapi uvicorn requests python-dotenv（与 cli/requirements.txt 一致）
+依赖: 见 server/requirements.txt
 """
 
 import os

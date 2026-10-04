@@ -104,9 +104,11 @@ CLI / Web / 桌面三个形态**共用同一个 Dify API**，只是「谁来持�
 |------|------|------|------|
 | CLI | Python + rich | ✅ 已完成 | `cd cli && python cli.py` |
 | Web | Vue3 + Tailwind + PWA | ✅ 已完成 | `http://localhost:8080` |
-| 桌面 | Electron | 🚧 已搭建，暂缓安装 | `cd desktop && npm start` |
+| 桌面 | Electron | ✅ 已完成（可打包为 exe 安装包） | `cd desktop && npm start` |
 
 CLI 用于**最快验证**工作流；Web 用于**面向同学**的日常使用（PWA 可添加到手机桌面）；桌面用于**内嵌分发**（本机可信，Key 走设置窗口）。
+
+> 桌面安装包（Windows `.exe`）体积较大，未纳入仓库，已通过 **GitHub Release** 提供下载；源码运行见第五节。
 
 ---
 
@@ -130,23 +132,39 @@ CLI 用于**最快验证**工作流；Web 用于**面向同学**的日常使用�
 ai应用创新开发/
 ├── cli/                     # 命令行对话客户端（直连 Dify）
 │   ├── cli.py               # 主程序：交互式 / 单轮对话
-│   └── ollama_backend.py    # 备选后端：绕过 Dify 直连 Ollama
-├── web/                     # Web 前端（Vue3 单页 + PWA）
-│   ├── index.html           # 页面与对话逻辑
-│   ├── config.js            # 仅存代理地址，不含任何密钥
-│   └── sw.js                # Service Worker（config.js 走网络优先）
-├── desktop/                 # Electron 桌面端
-│   ├── main.js / preload.js # 主进程 + 安全桥接
+│   ├── convert_to_ollama.py # 工作流 YAML 转本地 Ollama Provider
+│   ├── download_ollama.py   # Ollama 便携版下载器
+│   └── test_ollama.py       # Ollama 连通性自检
+├── web/                     # Web 前端（Vue3 单页 + PWA，仅做 UI 与订阅）
+│   ├── index.html           # UI 骨架（无内联脚本）
+│   ├── app.js               # Vue 组件逻辑
+│   ├── api.js               # 通信层：SSE 订阅（不含任何密钥）
+│   ├── config.js            # 仅存后端地址（默认 http://localhost:8001）
+│   ├── sw.js                # Service Worker（PWA 离线缓存）
+│   └── manifest.json        # PWA 应用清单
+├── desktop/                 # Electron 桌面端（主进程只做组装）
+│   ├── main.js              # 组装层
+│   ├── preload.js           # contextBridge 安全桥
+│   ├── settings.html/.js    # 设置窗口
+│   ├── src/                 # 功能模块：配置/代理/窗口/托盘/设置
 │   └── assets/icon.png
-├── server/
-│   └── dify_proxy.py        # 服务端代理：注入 API Key + SSE 透传
-├── config/
+├── server/                  # 后端服务（只做计算与 SSE 推送）
+│   ├── dify_proxy.py        # 主路线：代理 Dify，注入 Key + 透传 SSE（端口 8001）
+│   └── ollama_backend.py    # 备用后端：直连 Ollama（端口 8000）
+├── config/                  # 集中配置
 │   ├── .env                 # 真实配置（已被 .gitignore 排除）
 │   └── .env.example         # 配置模板
+├── docker/                  # Docker + Dify 自部署辅助脚本
+│   ├── 一键安装Docker和Dify.bat
+│   ├── install-docker.ps1
+│   └── pull-images.ps1 / pull-images2.ps1
 ├── 心理助手_集成版_V3_fixed.yml  # Dify 工作流源文件（可导入）
+├── 心理助手_ollama版.yml         # 转换为本地 Ollama Provider 的版本
 ├── setup.ps1                # 一键环境安装脚本
 └── start.bat                # 一键启动面板
 ```
+
+> 每个功能文件夹（`cli/ web/ desktop/ server/ config/ docker/`）下都有独立的简短 `README.md`，说明该模块的职责与启动方式。
 
 > 说明：`docker/dify/` 为第三方 Dify 官方源码，体积大且非本项目成果，已在 `.gitignore` 中排除，需自行 clone。
 
@@ -191,7 +209,7 @@ cd cli ; python cli.py
 
 ## 九、后续规划
 
-- [ ] 桌面端打包分发
+- [x] 桌面端打包分发
 - [ ] 小程序形态（对话入口）
 - [ ] 更丰富的华农校园知识库（RAG 接入）
 - [ ] 风险预警与人工转介闭环

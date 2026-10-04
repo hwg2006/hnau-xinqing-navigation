@@ -1,36 +1,58 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Ollama 直接模式后端（不依赖 Dify）
-适合不想装 Docker/Dify 的用户，直接用本地模型 + FastAPI
+华农心晴导航 - 备用后端（直连 Ollama，不依赖 Dify）
 
-启动: uvicorn ollama_backend:app --host 0.0.0.0 --port 8000 --reload
-然后把 web/config.js 的 difyBaseUrl 改成 http://localhost:8000
+定位：主路线是「Ollama → Dify → server/dify_proxy.py → 应用」。
+      本文件是给「不想装 Docker / Dify」的同学的降级方案：把 Ollama
+      包装成与 Dify 一致的 /v1/chat-messages 接口，前端代码无需改动。
+      它不参与一键启动流程，需要时手动启用。
+
+启动（在 server/ 目录下）:
+    uvicorn ollama_backend:app --host 127.0.0.1 --port 8000
+
+启用后需把 web/config.js 的 apiBaseUrl 改成 http://localhost:8000
+
+依赖: 见 server/requirements.txt
+环境变量（config/.env）:
+    OLLAMA_BASE_URL   默认 http://localhost:11434
+    OLLAMA_MODEL      默认 qwen2.5:7b
 """
 
 import os
 import json
-import requests
+from pathlib import Path
 from datetime import datetime, timezone, timedelta
+from typing import Optional
+
+import requests
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import Optional
 
-app = FastAPI(title="华农心晴导航 API (Ollama 直连)")
+# ---------- 加载 config/.env（缺失也能跑，用默认值） ----------
+ROOT = Path(__file__).resolve().parent.parent
+ENV_FILE = ROOT / "config" / ".env"
+if ENV_FILE.exists():
+    load_dotenv(ENV_FILE)
 
-# CORS - 允许 Web 前端跨域
+# 键名以 config/.env.example 的 OLLAMA_BASE_URL 为准，OLLAMA_URL 仅作兼容回退
+OLLAMA_URL = (
+    os.getenv("OLLAMA_BASE_URL") or os.getenv("OLLAMA_URL") or "http://localhost:11434"
+).rstrip("/")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+
+app = FastAPI(title="华农心晴导航 API (Ollama 直连 · 备用)")
+
+# 只允许本机前端跨域，与 server/dify_proxy.py 保持一致的安全姿势
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["content-type"],
 )
-
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
 
 # 系统提示词 - 精简版
 SYSTEM_PROMPT = """你是「华农心晴导航」心理健康智能陪伴助手，服务华南农业大学学生。
@@ -61,7 +83,15 @@ class ChatRequest(BaseModel):
 
 
 # 内存会话历史: conversation_id -> [{"role","content"}]
+MAX_SESSIONS = 100  # 上限，防止长跑后内存无限增长（超出按先进先出淘汰）
 _SESSIONS = {}
+
+
+def _get_session(conv_id: str) -> list:
+    """取会话历史；超上限时淘汰最早的一个会话。"""
+    if conv_id not in _SESSIONS and len(_SESSIONS) >= MAX_SESSIONS:
+        _SESSIONS.pop(next(iter(_SESSIONS)))
+    return _SESSIONS.setdefault(conv_id, [])
 
 
 def _ask_ollama(messages):
@@ -79,7 +109,7 @@ def _ask_ollama(messages):
 
 
 def _stream_ollama(conv_id, messages, query):
-    """SSE 流式输出，兼容 Dify 的 streaming 协议"""
+    """SSE 流式输出，协议兼容 Dify 的 streaming"""
     full = []
     try:
         with requests.post(
@@ -111,7 +141,7 @@ def _stream_ollama(conv_id, messages, query):
         ) + "\n\n"
 
     answer = "".join(full)
-    _SESSIONS.setdefault(conv_id, []).extend([
+    _get_session(conv_id).extend([
         {"role": "user", "content": query},
         {"role": "assistant", "content": answer},
     ])
@@ -123,8 +153,9 @@ def _stream_ollama(conv_id, messages, query):
 
 @app.get("/")
 def root():
+    """健康检查"""
     return {
-        "service": "华农心晴导航 API",
+        "service": "华农心晴导航 API (Ollama 直连 · 备用)",
         "model": OLLAMA_MODEL,
         "ollama": OLLAMA_URL,
         "status": "ok",
@@ -141,7 +172,7 @@ async def chat(req: ChatRequest):
     conv_id = req.conversation_id or (
         "local_" + req.user + "_" + datetime.now().strftime("%H%M%S")
     )
-    history = _SESSIONS.setdefault(conv_id, [])
+    history = _get_session(conv_id)
     messages = (
         [{"role": "system", "content": system}]
         + history
@@ -170,5 +201,11 @@ def health():
     try:
         resp = requests.get(f"{OLLAMA_URL}/api/tags", timeout=3)
         return {"ollama_connected": resp.status_code == 200, "model": OLLAMA_MODEL}
-    except Exception as e:
+    except requests.RequestException as e:
         return {"ollama_connected": False, "error": str(e)}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="127.0.0.1", port=int(os.getenv("OLLAMA_BACKEND_PORT", "8000")))
