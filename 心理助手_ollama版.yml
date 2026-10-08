@@ -120,34 +120,6 @@ workflow:
     value_type: string
   environment_variables: []
   features:
-    file_upload:
-      allowed_file_extensions:
-      - .JPG
-      - .JPEG
-      - .PNG
-      - .GIF
-      - .WEBP
-      - .SVG
-      allowed_file_types:
-      - image
-      allowed_file_upload_methods:
-      - local_file
-      - remote_url
-      enabled: false
-      fileUploadConfig:
-        audio_file_size_limit: 50
-        batch_count_limit: 5
-        file_size_limit: 50
-        image_file_size_limit: 10
-        video_file_size_limit: 100
-        workflow_file_upload_limit: 10
-      image:
-        enabled: false
-        number_limits: 3
-        transfer_methods:
-        - local_file
-        - remote_url
-      number_limits: 3
     opening_statement: '你好，我是华农心晴导航，一个校园心理支持AI助手，不是真人心理老师，也不能替代心理咨询师或医生。
 
 
@@ -577,17 +549,6 @@ workflow:
       targetHandle: target
       type: custom
       zIndex: 0
-    - data:
-        isInLoop: false
-        sourceType: if-else
-        targetType: answer
-      id: prefilter-to-image
-      source: crisis_prefilter
-      sourceHandle: image
-      target: answer_image
-      targetHandle: target
-      type: custom
-      zIndex: 0
     nodes:
     - data:
         desc: ''
@@ -952,63 +913,6 @@ workflow:
             - sys
             - query
           logical_operator: or
-        - case_id: image
-          conditions:
-          - comparison_operator: contains
-            id: img_1
-            value: 上传图片
-            variable_selector:
-            - sys
-            - query
-          - comparison_operator: contains
-            id: img_2
-            value: 上传照片
-            variable_selector:
-            - sys
-            - query
-          - comparison_operator: contains
-            id: img_3
-            value: 发照片
-            variable_selector:
-            - sys
-            - query
-          - comparison_operator: contains
-            id: img_4
-            value: 发图片
-            variable_selector:
-            - sys
-            - query
-          - comparison_operator: contains
-            id: img_5
-            value: 识别图片
-            variable_selector:
-            - sys
-            - query
-          - comparison_operator: contains
-            id: img_6
-            value: 看图识别
-            variable_selector:
-            - sys
-            - query
-          - comparison_operator: contains
-            id: img_7
-            value: 能看图
-            variable_selector:
-            - sys
-            - query
-          - comparison_operator: contains
-            id: img_8
-            value: 发张图
-            variable_selector:
-            - sys
-            - query
-          - comparison_operator: contains
-            id: img_9
-            value: 传图片
-            variable_selector:
-            - sys
-            - query
-          logical_operator: or
         desc: 在分类器前检测明确危机表达；避免使用“想跳”“想自”等过短片段造成误判，命中后先写入风险标签再回复
         selected: false
         title: 危机关键词预检
@@ -1185,8 +1089,6 @@ workflow:
         title: 意图识别（8类）
         type: parameter-extractor
         variables: []
-        vision:
-          enabled: false
       height: 129
       id: intent_extract_v2
       position:
@@ -1538,8 +1440,6 @@ workflow:
         title: 统一对话LLM
         type: llm
         variables: []
-        vision:
-          enabled: false
         error_strategy: fail-branch
       height: 133
       id: llm
@@ -1609,8 +1509,6 @@ workflow:
         title: 记忆提取
         type: parameter-extractor
         variables: []
-        vision:
-          enabled: false
       height: 117
       id: memory_extract_v2
       position:
@@ -1759,8 +1657,6 @@ workflow:
         title: 校园服务LLM
         type: llm
         variables: []
-        vision:
-          enabled: false
         error_strategy: fail-branch
       height: 117
       id: llm_kb
@@ -2514,32 +2410,6 @@ workflow:
       positionAbsolute:
         x: 730
         y: 200
-      selected: false
-      sourcePosition: right
-      targetPosition: left
-      type: custom
-      width: 303
-    - data:
-        answer: '当前版本暂不支持图片上传和识别功能。
-
-
-          如果你有想表达的内容，可以用文字描述，我会认真倾听。
-
-
-          如果你需要分享视觉内容（如心情日记、绘画表达等），可以尝试用文字描述画面中的感受和想法。'
-        desc: 图片相关提问的固定话术（不经过LLM，避免依赖提示词规则）
-        selected: false
-        title: 图片不支持回复
-        type: answer
-        variables: []
-      height: 257
-      id: answer_image
-      position:
-        x: 730
-        y: 300
-      positionAbsolute:
-        x: 730
-        y: 300
       selected: false
       sourcePosition: right
       targetPosition: left
