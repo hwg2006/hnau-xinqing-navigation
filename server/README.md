@@ -6,8 +6,8 @@
 
 | 文件 | 端口 | 说明 |
 |------|------|------|
-| `dify_proxy.py` | 8001 | **主路线**：代理 Dify，转发时注入 `Authorization`，Key 只存服务端；透传 SSE |
-| `ollama_backend.py` | 8000 | **备用后端**：绕过 Dify 直连 Ollama，无需 Docker 时使用 |
+| `dify_proxy.py` | 8001 | **主路线**：代理 Dify，转发时注入 `Authorization`，Key 只存服务端；透传 SSE；**同源托管 `web/` 前端页面** |
+| `ollama_backend.py` | 8000 | **备用后端**：绕过 Dify 直连 Ollama，无需 Docker 时使用（不托管前端） |
 
 ## 启动
 
@@ -15,7 +15,7 @@
 cd server
 pip install -r requirements.txt
 
-# 主路线（推荐）
+# 主路线（推荐）：启动后浏览器访问 http://127.0.0.1:8001 即为 Web 前端
 python -m uvicorn dify_proxy:app --host 127.0.0.1 --port 8001
 
 # 备用后端（直连 Ollama，需本机已运行 ollama serve）

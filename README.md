@@ -103,7 +103,7 @@ CLI / Web / 桌面三个形态**共用同一个 Dify API**，只是「谁来持�
 | 形态 | 技术 | 状态 | 入口 |
 |------|------|------|------|
 | CLI | Python + rich | ✅ 已完成 | `cd cli && python cli.py` |
-| Web | Vue3 + Tailwind + PWA | ✅ 已完成 | `http://localhost:8080` |
+| Web | Vue3 + Tailwind + PWA | ✅ 已完成 | `http://127.0.0.1:8001` |
 | 桌面 | Electron | ✅ 已完成（可打包为 exe 安装包） | `cd desktop && npm start` |
 
 CLI 用于**最快验证**工作流；Web 用于**面向同学**的日常使用（PWA 可添加到手机桌面）；桌面用于**内嵌分发**（本机可信，Key 走设置窗口）。
@@ -140,7 +140,7 @@ ai应用创新开发/
 │   ├── index.html           # UI 骨架（无内联脚本）
 │   ├── app.js               # Vue 组件逻辑
 │   ├── api.js               # 通信层：SSE 订阅（不含任何密钥）
-│   ├── config.js            # 仅存后端地址（默认 http://localhost:8001）
+│   ├── config.js            # 仅存后端地址（默认 ""，即与页面同源）
 │   ├── sw.js                # Service Worker（PWA 离线缓存）
 │   └── manifest.json        # PWA 应用清单
 ├── desktop/                 # Electron 桌面端（主进程只做组装）
@@ -150,7 +150,7 @@ ai应用创新开发/
 │   ├── src/                 # 功能模块：配置/代理/窗口/托盘/设置
 │   └── assets/icon.png
 ├── server/                  # 后端服务（只做计算与 SSE 推送）
-│   ├── dify_proxy.py        # 主路线：代理 Dify，注入 Key + 透传 SSE（端口 8001）
+│   ├── dify_proxy.py        # 主路线：代理 Dify，注入 Key + 透传 SSE，并同源托管 web/（端口 8001）
 │   ├── ollama_backend.py    # 备用后端：直连 Ollama（端口 8000）
 │   └── requirements.txt     # 后端依赖
 ├── config/                  # 集中配置
@@ -191,11 +191,9 @@ ollama pull qwen2.5:7b
 cd docker\dify\docker ; docker compose up -d
 # 浏览器打开 http://localhost，导入 心理助手_集成版_V3_fixed.yml 并发布
 
-# 3) 启动 Web 代理（隐藏 Key）
+# 3) 启动 Web 代理（隐藏 Key），同时同源托管 Web 前端
 cd server ; python -m uvicorn dify_proxy:app --host 127.0.0.1 --port 8001
-
-# 4) 启动 Web 前端
-cd web ; python -m http.server 8080     # 访问 http://localhost:8080
+# 浏览器打开 http://127.0.0.1:8001 即为 Web 前端
 
 # 或直接用 CLI
 cd cli ; python cli.py

@@ -8,8 +8,10 @@
   'use strict';
 
   // 地址来源优先级：桌面端注入(HN_DESKTOP) > web/config.js > 默认本地代理
+  // 注意用 ??（而非 ||）：web 版 config.js 显式设 apiBaseUrl="" 表示"与页面同源"，
+  // 空串是合法值，不能被 || 当作 falsy 回退掉。
   const config = window.APP_CONFIG || {};
-  const API_BASE = (config.apiBaseUrl || 'http://localhost:8001').replace(/\/$/, '');
+  const API_BASE = (config.apiBaseUrl ?? 'http://localhost:8001').replace(/\/$/, '');
 
   // 匿名用户标识：首次访问生成并持久化，避免写死固定 ID 造成多用户串扰
   const USER_ID = (function () {

@@ -5,9 +5,11 @@
 
 作用：浏览器只调用本代理，代理在服务端注入 Authorization 后转发给本地 Dify。
       Dify API Key 只存在于服务端 config/.env，不会下发到前端。
+      同时把 web/ 前端与 /v1 接口放在同一端口（同源），避免跨端口流式请求被重置。
 
 启动（在 server/ 目录下）:
     uvicorn dify_proxy:app --host 127.0.0.1 --port 8001
+    # 浏览器访问 http://127.0.0.1:8001 即可（前端与接口同源，无需再起 8080）
 
 依赖: 见 server/requirements.txt
 """
@@ -22,10 +24,12 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 # ---------- 加载 config/.env ----------
 ROOT = Path(__file__).resolve().parent.parent
 ENV_FILE = ROOT / "config" / ".env"
+WEB_DIR = ROOT / "web"
 if not ENV_FILE.exists():
     print(f"[!] 未找到配置文件: {ENV_FILE}")
     sys.exit(1)
@@ -56,8 +60,8 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-def root():
+@app.get("/health")
+def health():
     """健康检查。注意：绝不返回任何 Key 信息。"""
     return {"service": "华农心晴导航 Web 代理", "upstream": DIFY_BASE_URL, "status": "ok"}
 
@@ -86,7 +90,15 @@ async def chat_messages(request: Request):
             except requests.RequestException as e:
                 yield _sse_error(str(e))
 
-        return StreamingResponse(stream(), media_type="text/event-stream")
+        return StreamingResponse(
+            stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",  # 关闭中间层缓冲，保证 SSE 逐块下发
+                "Connection": "keep-alive",
+            },
+        )
 
     try:
         r = requests.post(TARGET, json=body, headers=UPSTREAM_HEADERS, timeout=300)
@@ -102,3 +114,12 @@ async def chat_messages(request: Request):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=PROXY_PORT)
+
+
+# ---------- 同源托管前端（必须放在所有 API 路由之后） ----------
+# 挂载在 "/" 下，使浏览器从 http://127.0.0.1:8001 打开页面的同时，
+# 以相对路径 /v1/chat-messages 调用接口，二者同源，杜绝跨端口流式请求问题。
+if WEB_DIR.is_dir():
+    app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
+else:
+    print(f"[!] 未找到 web 前端目录，仅提供接口: {WEB_DIR}")

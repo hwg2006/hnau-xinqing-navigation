@@ -3,7 +3,7 @@
 // 职责：提供基础离线缓存，让 Web 版可"添加到桌面"当独立应用
 // 说明：修改前端文件后需同步升 CACHE_NAME，否则用户会读到旧缓存
 // ============================================================
-const CACHE_NAME = 'xinqiang-nav-v3';
+const CACHE_NAME = 'xinqiang-nav-v4';
 const PRECACHE_URLS = [
   './',
   './index.html',

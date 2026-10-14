@@ -15,7 +15,7 @@ echo.
 echo [1] 启动 Ollama 服务 (ollama serve)                ^<- 主路线第 1 步
 echo [2] 启动 Dify (Docker)                             ^<- 主路线第 2 步
 echo [4] 启动后端代理 (dify_proxy, 端口 8001)           ^<- Web/桌面必需
-echo [5] 打开 Web 前端 (浏览器访问 http://localhost:8080)
+echo [5] 打开 Web 前端 (浏览器访问 http://127.0.0.1:8001)
 echo [6] 启动 Electron 桌面应用
 echo [3] 启动 CLI 对话
 echo [7] 一键启动主路线 (Ollama + Dify + 后端代理 8001)
@@ -82,15 +82,14 @@ echo [!] 需要先: pip install -r server\requirements.txt
 start "心晴导航-备用后端" cmd /c "python -m uvicorn ollama_backend:app --host 127.0.0.1 --port 8000"
 echo [+] 备用后端已在新窗口启动
 echo [!] 还需把 web\config.js 的 apiBaseUrl 改为 http://localhost:8000
+echo     并在 web\ 目录另起静态服务: python -m http.server 8080
 goto end
 
 :web
 echo.
-echo [*] 启动 Web 前端...
-cd /d "%~dp0web"
-echo [!] 请确保已启动 [4] 后端代理 (端口 8001)
-start "" http://localhost:8080
-python -m http.server 8080
+echo [*] 打开 Web 前端...
+echo [!] 前端由后端代理同源托管，请先启动 [4] 后端代理 (端口 8001)
+start "" http://127.0.0.1:8001
 goto end
 
 :electron
@@ -133,7 +132,7 @@ echo [+] 主路线已启动完毕！
 echo     - Ollama:      http://localhost:11434
 echo     - Dify:        http://localhost
 echo     - 后端代理:     http://127.0.0.1:8001
-echo     - Web 前端:    双击 start.bat 选 [5]  （或 cd web ^&^& python -m http.server 8080）
+echo     - Web 前端:    http://127.0.0.1:8001  （由后端代理同源托管）
 echo     - 桌面应用:    cd desktop ^&^& npm.cmd start
 echo     - CLI:        cd cli ^&^& python cli.py
 goto end
